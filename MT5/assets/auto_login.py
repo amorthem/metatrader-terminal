@@ -86,6 +86,11 @@ class VNClient:
         self.client.keyPress('enter')
         time.sleep(3)
 
+        # Dismiss LiveUpdate popup if it appears (click 'Later')
+        self.client.mouseMove(710, 460)
+        self.client.mousePress(1)
+        time.sleep(0.5)
+
         # Close search dialog (Cancel button)
         self.client.mouseMove(930, 685)
         self.client.mousePress(1)
@@ -124,23 +129,25 @@ class VNClient:
         self.client.keyPress('enter')
         time.sleep(5)
 
-    def dismiss_update_popup(self):
+    def dismiss_popups(self):
         """
-        Dismisses the LiveUpdate popup if it appears after login.
-        Clicks the 'Later' button to close it.
+        Dismisses any popups (LiveUpdate, Open Account, etc.) by pressing
+        Escape multiple times. This is more reliable than clicking specific
+        coordinates since popups can appear at different positions.
         """
-        time.sleep(2)
-        self.client.mouseMove(620, 450)
-        self.client.mousePress(1)
+        for _ in range(5):
+            self.client.keyPress('esc')
+            time.sleep(0.3)
         time.sleep(0.5)
 
     def enable_algo_trading(self):
         """
-        Enables algorithmic trading on the MetaTrader 5 platform.
+        Enables algorithmic trading on the MetaTrader 5 platform
+        using the Ctrl+E keyboard shortcut.
         """
-        # Enable Algo trading (toolbar button with green/red icon)
-        self.client.mouseMove(315, 52)
-        self.client.mousePress(1)
+        self.client.keyDown('ctrl')
+        self.client.keyPress('e')
+        self.client.keyUp('ctrl')
         time.sleep(0.2)
 
     def open_journal_tab(self):
@@ -263,8 +270,8 @@ def main():
         # Log in to MetaTrader 5
         vnc_mt5_client.login_to_mt5(login, password, server)
 
-        # Dismiss LiveUpdate popup if it appears
-        vnc_mt5_client.dismiss_update_popup()
+        # Dismiss any popups (LiveUpdate, Open Account, etc.)
+        vnc_mt5_client.dismiss_popups()
 
         # Enable algorithmic trading
         vnc_mt5_client.enable_algo_trading()
