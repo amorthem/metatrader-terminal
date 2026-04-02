@@ -57,6 +57,8 @@ docker run -d \
 
 This will start the MT5 terminal (VNC), auto-login to your account, and launch the FastAPI server.
 
+> **Note**: The full startup takes approximately **2 minutes**. Most of this time is the MT5 terminal connecting to your broker's server. The API will not be available until login is verified. You can monitor progress via the VNC interface at `http://localhost:6901`.
+
 ## 4. Nginx Configuration
 
 1.  **Copy snippets**:

@@ -57,7 +57,7 @@ This repository packages everything needed to run a reliable MT5 instance on a L
       -p 8000:8000 \
       -e MT5_LOGIN=12345678 \
       -e MT5_PASSWORD=your_password \
-      -e MT5_SERVER=YourBroker-Demo \
+      -e MT5_SERVER=YourBroker \
       -e VNC_PASSWORD=password \
       ghcr.io/nodalytics/mt5-terminal:latest
     ```
@@ -68,6 +68,9 @@ This repository packages everything needed to run a reliable MT5 instance on a L
 
 > [!TIP]
 > **Auto-Login**: When `MT5_LOGIN`, `MT5_PASSWORD`, and `MT5_SERVER` are set, the terminal automatically logs in to your MT5 account on startup via VNC automation. The FastAPI server starts after login is verified. You can watch the process live at the VNC URL above.
+
+> [!NOTE]
+> **Startup Time**: The full startup (VNC + MT5 launch + auto-login + API) takes approximately **2 minutes**. Most of this time is the MT5 terminal connecting to your broker's server. The API will not be available until login is verified.
 
 ## 📖 Documentation
 
