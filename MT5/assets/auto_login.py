@@ -86,8 +86,8 @@ class VNClient:
         self.client.keyPress('enter')
         time.sleep(3)
 
-        # Close search dialog
-        self.client.mouseMove(930, 630)
+        # Close search dialog (Cancel button)
+        self.client.mouseMove(930, 685)
         self.client.mousePress(1)
         time.sleep(0.3)
 
@@ -124,12 +124,22 @@ class VNClient:
         self.client.keyPress('enter')
         time.sleep(5)
 
+    def dismiss_update_popup(self):
+        """
+        Dismisses the LiveUpdate popup if it appears after login.
+        Clicks the 'Later' button to close it.
+        """
+        time.sleep(2)
+        self.client.mouseMove(620, 450)
+        self.client.mousePress(1)
+        time.sleep(0.5)
+
     def enable_algo_trading(self):
         """
         Enables algorithmic trading on the MetaTrader 5 platform.
         """
-        # Enable Algo trading
-        self.client.mouseMove(890, 50)
+        # Enable Algo trading (toolbar button with green/red icon)
+        self.client.mouseMove(315, 52)
         self.client.mousePress(1)
         time.sleep(0.2)
 
@@ -252,6 +262,9 @@ def main():
     try:
         # Log in to MetaTrader 5
         vnc_mt5_client.login_to_mt5(login, password, server)
+
+        # Dismiss LiveUpdate popup if it appears
+        vnc_mt5_client.dismiss_update_popup()
 
         # Enable algorithmic trading
         vnc_mt5_client.enable_algo_trading()
