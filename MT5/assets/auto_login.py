@@ -58,10 +58,40 @@ class VNClient:
 
         time.sleep(0.5)
 
+    def wait_and_dismiss_liveupdate(self):
+        """
+        Waits for the LiveUpdate popup to appear after MT5 starts,
+        then dismisses it by pressing Tab (to focus 'Later') and Enter.
+        Must be called before any other VNC interaction to prevent the
+        popup from interfering with login form input.
+        """
+        # Wait for LiveUpdate popup to appear (it shows up ~15-20s after MT5 starts)
+        time.sleep(15)
+
+        # Tab moves focus from 'Restart' to 'Later', Enter clicks it
+        self.client.keyPress('tab')
+        time.sleep(0.1)
+        self.client.keyPress('enter')
+        time.sleep(1)
+
+    def dismiss_popups(self):
+        """
+        Dismisses any remaining popups (Open Account, etc.)
+        by pressing Escape and clicking known Cancel positions.
+        """
+        for _ in range(3):
+            self.client.keyPress('esc')
+            time.sleep(0.2)
+
+        # Click Cancel on Open Account dialog if visible
+        self.client.mouseMove(930, 645)
+        self.client.mousePress(1)
+        time.sleep(0.3)
+
     def ping_mt_server(self, server: str):
         """
         Ping MetaTrader's server by searching for the broker server in the list of company servers available.
-        
+
         Args:
             server (str): The broker server name to search for.
         """
@@ -86,13 +116,8 @@ class VNClient:
         self.client.keyPress('enter')
         time.sleep(3)
 
-        # Dismiss LiveUpdate popup if it appears (click 'Later')
-        self.client.mouseMove(710, 460)
-        self.client.mousePress(1)
-        time.sleep(0.5)
-
-        # Close search dialog (Cancel button)
-        self.client.mouseMove(930, 685)
+        # Close Open Account dialog (Cancel button)
+        self.client.mouseMove(930, 645)
         self.client.mousePress(1)
         time.sleep(0.3)
 
@@ -128,17 +153,6 @@ class VNClient:
         time.sleep(0.2)
         self.client.keyPress('enter')
         time.sleep(5)
-
-    def dismiss_popups(self):
-        """
-        Dismisses any popups (LiveUpdate, Open Account, etc.) by pressing
-        Escape multiple times. This is more reliable than clicking specific
-        coordinates since popups can appear at different positions.
-        """
-        for _ in range(5):
-            self.client.keyPress('esc')
-            time.sleep(0.3)
-        time.sleep(0.5)
 
     def enable_algo_trading(self):
         """
@@ -185,7 +199,7 @@ class VNClient:
         """
         os.environ['LOGIN_SUCCESSFUL'] = 'true'
 
-    def verify_login(self, login: str, password: str, server: str) -> bool:
+    def verify_login(self, login: str, password: str, server: str, max_retries: int = 3) -> bool:
         """
         Verifies if the MetaTrader 5 login was successful.
 
@@ -196,10 +210,11 @@ class VNClient:
             login (str): The MetaTrader 5 account login number.
             password (str): The MetaTrader 5 account password.
             server (str): The MetaTrader 5 server name.
-        
+            max_retries (int): Maximum number of retry attempts (default is 3).
+
         Returns:
             bool: True if the login is successful, False otherwise.
-        
+
         Raises:
             Exception: If the login fails, with the error code and description.
         """
@@ -213,7 +228,7 @@ class VNClient:
             login=int(login),
             password=password,
             server=server,
-            timeout=120,
+            timeout=30,
             portable=True
         )
 
@@ -225,13 +240,17 @@ class VNClient:
             error_code, error_description = mt5.last_error()
 
             # Check for IPC timeout => -10005:
-            if int(error_code) != mt5.RES_E_INTERNAL_FAIL_TIMEOUT: 
+            if int(error_code) != mt5.RES_E_INTERNAL_FAIL_TIMEOUT:
                 raise Exception(f"Login failed, error code = {error_code}, description = {error_description}")
-            
-            # Probe server
+
+            if max_retries <= 0:
+                raise Exception(f"Login verification timed out after retries, error code = {error_code}, description = {error_description}")
+
+            # Dismiss popups and retry
+            self.dismiss_popups()
             self.ping_mt_server(server)
             time.sleep(0.5)
-            self.verify_login(login, password, server)
+            return self.verify_login(login, password, server, max_retries=max_retries - 1)
 
 def load_mt5_credentials():
     """
@@ -267,10 +286,13 @@ def main():
     vnc_mt5_client = VNClient(server_url=VNC_SERVER_URL, password=VNC_SERVER_PASSWORD)
 
     try:
+        # Dismiss LiveUpdate popup before doing anything else
+        vnc_mt5_client.wait_and_dismiss_liveupdate()
+
         # Log in to MetaTrader 5
         vnc_mt5_client.login_to_mt5(login, password, server)
 
-        # Dismiss any popups (LiveUpdate, Open Account, etc.)
+        # Dismiss any remaining popups
         vnc_mt5_client.dismiss_popups()
 
         # Enable algorithmic trading
@@ -279,12 +301,9 @@ def main():
         # Optionally open the Journal tab
         vnc_mt5_client.open_journal_tab()
 
-        # Verify login
-        vnc_mt5_client.verify_login(login, password, server)
-
-        raise KeyboardInterrupt("Login attempt completed successfully.")
+        print("Auto-login sequence completed.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred during auto-login: {e}")
 
     finally:
         # Disconnect the VNC client
