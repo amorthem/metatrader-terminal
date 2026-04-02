@@ -7,7 +7,7 @@ services:
     environment:
       VNC_USER: ${VNC_USER:-"mt5_user"}
       VNC_PASSWORD: ${VNC_PASSWORD:-"password"}
-      MT5_LOGIN: ${MT5_ACCOUNT_NUMBER:-0}
+      MT5_LOGIN: ${MT5_LOGIN:-0}
       MT5_API_PORT: ${MT5_API_PORT:-8000}
       API_KEY_SEED: ${API_KEY_SEED:-"default-seed-for-dev"}
       MT5_PASSWORD: ${MT5_PASSWORD:-"password"}

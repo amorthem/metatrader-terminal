@@ -72,7 +72,7 @@ jobs:
             --name mt5-terminal-test \
             -p 18812:18812 \
             -p 5900:5900 \
-            -e MT5_ACCOUNT_NUMBER=123456 \
+            -e MT5_LOGIN=123456 \
             -e MT5_PASSWORD=test \
             -e MT5_SERVER=MetaQuotes-Demo \
             mt5-terminal:ci

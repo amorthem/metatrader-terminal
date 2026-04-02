@@ -226,7 +226,7 @@ def load_mt5_credentials():
     load_dotenv()
 
     # Retrieve MetaTrader 5 credentials from environment variables
-    login = os.getenv('MT5_ACCOUNT_NUMBER')
+    login = os.getenv('MT5_LOGIN')
     password = os.getenv('MT5_PASSWORD')
     server = os.getenv('MT5_SERVER')
 
@@ -238,7 +238,7 @@ def main():
 
     # Ensure required environment variables are set
     while not all([login, password, server]):
-        print("Required environment variables (MT5_ACCOUNT_NUMBER, MT5_PASSWORD, MT5_SERVER) are not set.")
+        print("Required environment variables (MT5_LOGIN, MT5_PASSWORD, MT5_SERVER) are not set.")
         time.sleep(5)  # Wait for 5 seconds before checking again
         # Reload credentials in case they are set during the loop
         login, password, server = load_mt5_credentials()
