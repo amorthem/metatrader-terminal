@@ -43,16 +43,31 @@ This repository packages everything needed to run a reliable MT5 instance on a L
     ```
 
 3.  **Launch**:
+
+    **With Docker Compose:**
     ```bash
-    docker compose up -d --build
+    docker compose -f MT5/docker-compose.yml --env-file .env up -d
+    ```
+
+    **With Docker (standalone):**
+    ```bash
+    docker run -d \
+      --name mt5-terminal \
+      -p 6901:6901 \
+      -p 8000:8000 \
+      -e MT5_LOGIN=12345678 \
+      -e MT5_PASSWORD=your_password \
+      -e MT5_SERVER=YourBroker-Demo \
+      -e VNC_PASSWORD=password \
+      ghcr.io/nodalytics/mt5-terminal:latest
     ```
 
 4.  **Access**:
     - **MT5 VNC (Web)**: `http://localhost:6901` (User: `mt5_user`, Pass: `password`)
     - **FastAPI Docs**: `http://localhost:8000/docs`
 
-> [!IMPORTANT]
-> **Initial Setup Required**: You MUST log in to the MetaTrader 5 terminal via the VNC interface at least once to complete the initial setup (accepting terms, choosing server, etc.) before the FastAPI service can successfully connect to the terminal.
+> [!TIP]
+> **Auto-Login**: When `MT5_LOGIN`, `MT5_PASSWORD`, and `MT5_SERVER` are set, the terminal automatically logs in to your MT5 account on startup via VNC automation. The FastAPI server starts after login is verified. You can watch the process live at the VNC URL above.
 
 ## 📖 Documentation
 
@@ -69,9 +84,11 @@ The project uses the following key variables in your `.env`:
 | :--- | :--- | :--- |
 | `VNC_USER` | Username for VNC access | `mt5_user` |
 | `VNC_PASSWORD` | Password for VNC access | `password` |
-| `MT5_LOGIN` | Your MT5 Account Number | - |
-| `MT5_PASSWORD` | Your MT5 Trading Password | - |
-| `MT5_SERVER` | Your Broker's Server | - |
+| `MT5_LOGIN` | Your MT5 account login number | `0` |
+| `MT5_PASSWORD` | Your MT5 trading password | - |
+| `MT5_SERVER` | Your broker's server name (e.g. `Deriv-Demo`) | - |
+| `MT5_API_PORT` | Port for the FastAPI service | `8000` |
+| `API_KEY_SEED` | Seed for API key authentication | - |
 
 ## 🤝 Contributing
 

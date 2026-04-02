@@ -17,17 +17,45 @@ cd metatrader-terminal
 
 ## 2. Environment Configuration
 
-Create a `.env` file in the root directory and configure the necessary variables (MT5 credentials, API keys, etc.).
-
-## 3. Deployment with Docker Compose
-
-Build and start the services using Docker Compose:
+Create a `.env` file from the example and fill in your MT5 credentials:
 
 ```bash
-docker compose up -d --build
+cp MT5/.env.example .env
 ```
 
-This will start the MT5 terminal (VNC) and the FastAPI server.
+At minimum, set the following for auto-login:
+
+```env
+MT5_LOGIN=12345678
+MT5_PASSWORD=your_password
+MT5_SERVER=YourBroker-Demo
+```
+
+When all three are set, the container will automatically log in to your MT5 account on startup via VNC automation and verify the connection before starting the API.
+
+## 3. Deployment
+
+### With Docker Compose
+
+```bash
+docker compose -f MT5/docker-compose.yml --env-file .env up -d
+```
+
+### With Docker (standalone)
+
+```bash
+docker run -d \
+  --name mt5-terminal \
+  -p 6901:6901 \
+  -p 8000:8000 \
+  -e MT5_LOGIN=12345678 \
+  -e MT5_PASSWORD=your_password \
+  -e MT5_SERVER=YourBroker-Demo \
+  -e VNC_PASSWORD=password \
+  ghcr.io/nodalytics/mt5-terminal:latest
+```
+
+This will start the MT5 terminal (VNC), auto-login to your account, and launch the FastAPI server.
 
 ## 4. Nginx Configuration
 
