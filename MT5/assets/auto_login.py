@@ -49,14 +49,14 @@ class VNClient:
         # Enter the new value with a slight delay between each character
         for character in value:
             self.client.keyPress(character)
-            time.sleep(0.1)
+            time.sleep(0.05)
 
         # Optionally, press Tab to move to the next field
         for _ in range(next_field_count):
             self.client.keyPress('tab')
             time.sleep(0.1)
-        
-        time.sleep(2)
+
+        time.sleep(0.5)
 
     def ping_mt_server(self, server: str):
         """
@@ -65,31 +65,31 @@ class VNClient:
         Args:
             server (str): The broker server name to search for.
         """
-        time.sleep(5)
+        time.sleep(2)
 
         # Click on the File tab
         self.client.mouseMove(20, 22)
         self.client.mousePress(1)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
         # Click on Open an Account
         self.client.mouseMove(100, 310)
         self.client.mousePress(1)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
-        # Search for server in list of companies 
+        # Search for server in list of companies
         self.client.mouseMove(350, 250)
         self.client.mousePress(1)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
         self.clear_and_type_value(server, empty_field=True)
         self.client.keyPress('enter')
-        time.sleep(5)
+        time.sleep(3)
 
-        # Close search dialog 
+        # Close search dialog
         self.client.mouseMove(930, 630)
         self.client.mousePress(1)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
     def login_to_mt5(self, login: str, password: str, server: str):
         """
@@ -102,12 +102,12 @@ class VNClient:
         """
         # Probe server
         self.ping_mt_server(server)
-        time.sleep(2)
+        time.sleep(0.5)
 
         # Click on the File tab
         self.client.mouseMove(20, 22)
         self.client.mousePress(1)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
         # Click on Login to Trade Account
         self.client.mouseMove(100, 380)
@@ -122,7 +122,7 @@ class VNClient:
 
         time.sleep(0.2)
         self.client.keyPress('enter')
-        time.sleep(10)
+        time.sleep(5)
 
     def enable_algo_trading(self):
         """
@@ -186,7 +186,7 @@ class VNClient:
         Raises:
             Exception: If the login fails, with the error code and description.
         """
-        time.sleep(15)
+        time.sleep(5)
 
         import MetaTrader5 as mt5
 
