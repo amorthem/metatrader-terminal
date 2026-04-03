@@ -27,6 +27,18 @@ def get_symbol(symbol: str):
     except Exception as e:
         raise error_response(f"Error fetching symbol: {str(e)}")
 
+@router.post("/select/{symbol}")
+def select_symbol(symbol: str):
+    try:
+        selected = mt5_service.select_symbol(symbol)
+        if not selected:
+            raise error_response(f"Failed to select symbol '{symbol}'")
+        return {"symbol": symbol, "selected": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise error_response(f"Error selecting symbol: {str(e)}")
+
 @router.get("/ticks/{symbol}")
 def get_symbol_tick(symbol: str):
     try:

@@ -11,7 +11,7 @@ def error_response(detail: str):
     return HTTPException(status_code=500, detail={"error": detail, "mt5_code": code, "mt5_msg": msg})
 
 @router.get("/deals")
-def get_history_deals(from_date: datetime, to_date: datetime, position: Optional[int] = None):
+def get_history_deals(from_date: Optional[datetime] = None, to_date: Optional[datetime] = None, position: Optional[int] = None):
     try:
         return mt5_service.get_history_deals(from_date, to_date, position)
     except Exception as e:

@@ -45,6 +45,10 @@ class MarketDataService:
         cache_manager.set(cache_key, info_dict, ttl=300)  # Symbol info changes rarely
         return info_dict
 
+    def select_symbol(self, symbol: str) -> bool:
+        mt5_connector.initialize()
+        return mt5.symbol_select(symbol, True)
+
     def get_symbol_info_tick(self, symbol: str) -> Dict:
         cache_key = f"symbol_tick_{symbol}"
         cached_tick = cache_manager.get(cache_key)
@@ -52,10 +56,11 @@ class MarketDataService:
             return cached_tick
 
         mt5_connector.initialize()
+        mt5.symbol_select(symbol, True)
         tick = mt5.symbol_info_tick(symbol)
         if not tick:
             raise MT5SymbolNotFoundError(f"Tick data for '{symbol}' not found.")
-        
+
         tick_dict = tick._asdict()
         cache_manager.set(cache_key, tick_dict, ttl=1)  # Tick data changes frequently
         return tick_dict

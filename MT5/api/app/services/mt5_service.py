@@ -31,6 +31,9 @@ class MT5Service:
     def get_positions(self, *args, **kwargs):
         return trade_service.get_positions(*args, **kwargs)
 
+    def select_symbol(self, *args, **kwargs):
+        return market_data_service.select_symbol(*args, **kwargs)
+
     def get_symbol_info(self, *args, **kwargs):
         return market_data_service.get_symbol_info(*args, **kwargs)
 
