@@ -1,12 +1,9 @@
 #!/bin/bash
-# wine_fix.sh — Upgrade Wine 7.0 → 10.0 inside the nodalytics/mt5-terminal container.
+# wine_fix.sh — Upgrade Wine inside the nodalytics/mt5-terminal container.
 #
-# MT5 build 5727+ requires Wine 10.0+ for IPC (named pipes) to work.
-# Without this, mt5.initialize() returns (-10005, 'IPC timeout') because
-# Wine 7.0 doesn't implement the pipe APIs the new MT5 build uses.
-#
-# This script is injected and executed by DockerizedMT5Gateway.safe_start()
-# after the container starts but before the health/IPC check.
+# Installs WineHQ Wine 9.x (staging) for MT5 IPC named pipe support.
+# Wine 10.0 stable has IPC issues with MetaTrader5 Python library 5.0.5640.
+# Wine 9.x staging has better named pipe compatibility.
 #
 # Usage (standalone):
 #   docker exec <container> bash /tmp/wine_fix.sh
@@ -16,12 +13,12 @@ set -e
 CURRENT=$(wine --version 2>/dev/null | grep -oP '[0-9]+\.[0-9]+' | head -1)
 MAJOR=${CURRENT%%.*}
 
-if [ "$MAJOR" -ge 10 ] 2>/dev/null; then
-    echo "wine_fix: Wine $CURRENT already >= 10.0, skipping upgrade."
+if [ "$MAJOR" -ge 9 ] 2>/dev/null; then
+    echo "wine_fix: Wine $CURRENT already >= 9.0, skipping upgrade."
     exit 0
 fi
 
-echo "wine_fix: Wine $CURRENT detected — upgrading to 10.0..."
+echo "wine_fix: Wine $CURRENT detected — upgrading to Wine 9.x staging..."
 
 dpkg --add-architecture i386 2>/dev/null || true
 
@@ -43,7 +40,13 @@ echo "deb [signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org
     > /etc/apt/sources.list.d/winehq.list
 
 apt-get update -qq
-DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-downgrades winehq-stable
+# Pin to Wine 9.0 — Wine 10.0's IPC named pipes don't work with MT5 Python lib
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-downgrades \
+    winehq-stable=9.0.0.0~bullseye-1 \
+    wine-stable=9.0.0.0~bullseye-1 \
+    wine-stable-amd64=9.0.0.0~bullseye-1 \
+    wine-stable-i386=9.0.0.0~bullseye-1 2>/dev/null \
+    || DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-downgrades winehq-stable
 
 echo "wine_fix: Upgrade complete — $(wine --version 2>/dev/null)"
 

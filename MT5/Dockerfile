@@ -73,9 +73,6 @@ RUN chmod +x /tmp/run-mt5.sh && BUILD_MODE=1 xvfb-run /tmp/run-mt5.sh
 COPY assets/wine_fix.sh /tmp/wine_fix.sh
 RUN chmod +x /tmp/wine_fix.sh && /tmp/wine_fix.sh && rm /tmp/wine_fix.sh
 
-# Layer 2.5: Re-register MT5 with Wine 10.0 wineserver (quick — just launch+exit)
-RUN xvfb-run sh -c 'wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable & sleep 15 && wineserver -k' || true
-
 # Layer 3: Install Python dependencies under Wine 10.0
 COPY assets/requirements.txt /tmp/requirements.txt
 COPY api/requirements.txt /tmp/api-requirements.txt

@@ -14,10 +14,9 @@ MT5_PATH = "C:\\Metatrader-5\\terminal64.exe"
 class MT5Connector:
     """MT5 connection manager.
 
-    Waits for auto-login to create LOGIN_MARKER, then calls
-    mt5.initialize() in a background thread. The blocking call
-    is safe at that point because MT5 is already logged in and
-    the IPC pipe should connect quickly.
+    Waits for auto-login to create LOGIN_MARKER (VNC login done),
+    then calls mt5.initialize() in a background thread to establish
+    the IPC pipe without blocking uvicorn.
     """
 
     def __init__(self):

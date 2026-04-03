@@ -304,9 +304,8 @@ def main():
         # Open the Journal tab
         vnc_mt5_client.open_journal_tab()
 
-        # Create marker file so the API server knows auto-login is done.
-        # We skip mt5.initialize() here — it blocks wineserver for 80s.
-        # The server connector verifies via mt5.terminal_info() instead.
+        # Create marker file so the API server knows VNC login is done.
+        # The server will call mt5.initialize() in a background thread.
         with open('/tmp/login_complete', 'w') as f:
             f.write('1')
 
