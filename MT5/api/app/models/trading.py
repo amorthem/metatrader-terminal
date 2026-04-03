@@ -16,7 +16,7 @@ class MarketOrderRequest(BaseModel):
     deviation: int = 20
     comment: str = ""
     magic: int = 0
-    type_filling: str = "IOC"
+    type_filling: str = "FOK"
 
 class PendingOrderRequest(BaseModel):
     symbol: str
@@ -28,6 +28,7 @@ class PendingOrderRequest(BaseModel):
     deviation: Optional[int] = 20
     comment: Optional[str] = ""
     magic: Optional[int] = 0
+    type_filling: str = "FOK"
 
 class ModifySLTPRequest(BaseModel):
     ticket: int

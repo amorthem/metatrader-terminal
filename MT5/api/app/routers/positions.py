@@ -17,9 +17,9 @@ def get_positions(magic: Optional[int] = None):
         raise error_response(f"Error fetching positions: {str(e)}")
 
 @router.post("/close")
-def close_position(ticket: int):
+def close_position(ticket: int, type_filling: str = "FOK"):
     try:
-        result = mt5_service.close_position(ticket)
+        result = mt5_service.close_position(ticket, type_filling=type_filling)
         if result is None or result.retcode != 10009:
             raise HTTPException(status_code=400, detail="Close failed")
         return {"success": True, "result": result._asdict()}
@@ -27,9 +27,9 @@ def close_position(ticket: int):
         raise error_response(f"Error closing position: {str(e)}")
 
 @router.post("/close_all")
-def close_all_positions(order_type: str = "all", magic: Optional[int] = None):
+def close_all_positions(order_type: str = "all", magic: Optional[int] = None, type_filling: str = "FOK"):
     try:
-        results = mt5_service.close_all_positions(order_type, magic)
+        results = mt5_service.close_all_positions(order_type, magic, type_filling=type_filling)
         return {"message": f"Closed {len(results)} positions", "results": [r._asdict() for r in results]}
     except Exception as e:
         raise error_response(f"Error closing all positions: {str(e)}")

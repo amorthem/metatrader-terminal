@@ -30,6 +30,32 @@ else
     echo "MetaTrader 5 already installed."
 fi
 
+# Patch MT5 config files (UTF-16LE encoded)
+MT5_CFG="/opt/wineprefix/drive_c/Metatrader-5/Config"
+
+# Disable LiveUpdate to prevent version mismatch with MetaTrader5 pip package
+if [ -f "$MT5_CFG/terminal.ini" ]; then
+    iconv -f UTF-16LE -t UTF-8 "$MT5_CFG/terminal.ini" > /tmp/mt5_cfg.ini 2>/dev/null
+    if ! grep -q "LiveUpdateMode" /tmp/mt5_cfg.ini; then
+        sed -i 's/\[LiveUpdate\]/[LiveUpdate]\nLiveUpdateMode=2/' /tmp/mt5_cfg.ini
+        iconv -f UTF-8 -t UTF-16LE /tmp/mt5_cfg.ini > "$MT5_CFG/terminal.ini"
+        echo "LiveUpdate disabled in terminal.ini"
+    fi
+    rm -f /tmp/mt5_cfg.ini
+fi
+
+# Enable algo trading via config (more reliable than VNC click)
+if [ -f "$MT5_CFG/common.ini" ]; then
+    iconv -f UTF-16LE -t UTF-8 "$MT5_CFG/common.ini" > /tmp/mt5_cfg.ini 2>/dev/null
+    sed -i 's/^\(Enabled=\).*/\11/' /tmp/mt5_cfg.ini
+    if ! grep -q "Enabled=1" /tmp/mt5_cfg.ini; then
+        sed -i 's/\[Experts\]/[Experts]\nEnabled=1/' /tmp/mt5_cfg.ini
+    fi
+    iconv -f UTF-8 -t UTF-16LE /tmp/mt5_cfg.ini > "$MT5_CFG/common.ini"
+    echo "Algo trading enabled in common.ini"
+    rm -f /tmp/mt5_cfg.ini
+fi
+
 # Run MT5 (Skip if in BUILD_MODE)
 if [ "$BUILD_MODE" = "1" ]; then
     echo "Metatrader 5 installed successfully (Build Mode). Skipping launch."

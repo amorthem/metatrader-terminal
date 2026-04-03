@@ -7,21 +7,22 @@ from app.utils.exceptions import MT5OrderError, MT5SymbolNotFoundError
 logger = logging.getLogger(__name__)
 
 class TradeService:
-    def send_market_order(self, symbol: str, volume: float, order_type: str, sl: float, tp: float = None, 
-                          deviation: int = 20, comment: str = '', magic: int = 0, type_filling: str = 'IOC'):
+    def send_market_order(self, symbol: str, volume: float, order_type: str, sl: float, tp: float = None,
+                          deviation: int = 20, comment: str = '', magic: int = 0, type_filling: str = 'FOK'):
         mt5_connector.initialize()
-        
+
         order_type_map = {
             'BUY': mt5.ORDER_TYPE_BUY,
             'SELL': mt5.ORDER_TYPE_SELL
         }
-        
+
         filling_map = {
             'IOC': mt5.ORDER_FILLING_IOC,
             'FOK': mt5.ORDER_FILLING_FOK,
             'RETURN': mt5.ORDER_FILLING_RETURN
         }
-        
+
+        mt5.symbol_select(symbol, True)
         tick = mt5.symbol_info_tick(symbol)
         if tick is None:
             raise MT5SymbolNotFoundError(f"Failed to get tick for {symbol}")
@@ -40,7 +41,7 @@ class TradeService:
             "magic": int(magic),
             "comment": comment,
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": filling_map.get(type_filling.upper(), mt5.ORDER_FILLING_IOC),
+            "type_filling": filling_map.get(type_filling.upper(), mt5.ORDER_FILLING_FOK),
         }
         
         if tp is not None:
@@ -73,7 +74,7 @@ class TradeService:
         result = mt5.order_send(request)
         return result
 
-    def close_position(self, ticket: int, deviation: int = 20, comment: str = '', type_filling: str = 'IOC'):
+    def close_position(self, ticket: int, deviation: int = 20, comment: str = '', type_filling: str = 'FOK'):
         if not mt5_connector.initialize(): return None
         
         positions = mt5.positions_get(ticket=ticket)
@@ -83,6 +84,7 @@ class TradeService:
             
         pos = positions[0]
         order_type = mt5.ORDER_TYPE_SELL if pos.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
+        mt5.symbol_select(pos.symbol, True)
         tick = mt5.symbol_info_tick(pos.symbol)
         price = tick.bid if pos.type == mt5.ORDER_TYPE_BUY else tick.ask
         
@@ -103,7 +105,7 @@ class TradeService:
             "magic": pos.magic,
             "comment": comment,
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": filling_map.get(type_filling.upper(), mt5.ORDER_FILLING_IOC),
+            "type_filling": filling_map.get(type_filling.upper(), mt5.ORDER_FILLING_FOK),
         }
         
         result = mt5.order_send(request)
@@ -117,17 +119,17 @@ class TradeService:
         if positions is None: return []
         return [p._asdict() for p in positions]
 
-    def close_all_positions(self, order_type: str = "all", magic: Optional[int] = None) -> List:
+    def close_all_positions(self, order_type: str = "all", magic: Optional[int] = None, type_filling: str = 'FOK') -> List:
         mt5_connector.initialize()
         positions = self.get_positions(magic)
         results = []
         if not positions: return []
-        
+
         for pos in positions:
             if order_type.upper() == 'BUY' and pos['type'] != mt5.ORDER_TYPE_BUY: continue
             if order_type.upper() == 'SELL' and pos['type'] != mt5.ORDER_TYPE_SELL: continue
-            
-            res = self.close_position(pos['ticket'])
+
+            res = self.close_position(pos['ticket'], type_filling=type_filling)
             if res: results.append(res)
         return results
 
