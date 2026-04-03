@@ -24,7 +24,20 @@ WINE_PID=$!
 echo "Waiting for auto-login to complete..."
 for i in $(seq 1 60); do
     if grep -q "Auto-login sequence completed" $LOG 2>/dev/null; then
-        echo "Auto-login succeeded — killing wineserver for clean IPC..."
+        # Wait for MT5 to save credentials to accounts.dat before killing
+        # wineserver. After restart, MT5 uses saved credentials to
+        # auto-reconnect to the broker without VNC interaction.
+        echo "Auto-login succeeded. Waiting for MT5 to save credentials..."
+        ACCOUNTS_DAT="/opt/wineprefix/drive_c/Metatrader-5/Config/accounts.dat"
+        for j in $(seq 1 30); do
+            if [ -f "$ACCOUNTS_DAT" ] && [ "$(stat -c%s "$ACCOUNTS_DAT" 2>/dev/null)" -gt 100 ]; then
+                echo "Credentials saved (accounts.dat: $(stat -c%s "$ACCOUNTS_DAT") bytes)"
+                break
+            fi
+            sleep 1
+        done
+
+        echo "Killing wineserver for clean IPC..."
         /usr/bin/wineserver -k 2>/dev/null || true
         sleep 2
         echo "1" > /tmp/login_complete
