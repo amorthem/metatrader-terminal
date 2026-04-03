@@ -18,7 +18,7 @@ class MT5Connector:
         """Blocking init — runs in a background thread."""
         try:
             logger.info("MT5 initialization started (background thread)...")
-            success = mt5.initialize()
+            success = mt5.initialize("C:\\Metatrader-5\\terminal64.exe", portable=True)
             if success:
                 self._initialized = True
                 logger.info("MT5 initialized successfully")
@@ -73,7 +73,8 @@ class MT5Connector:
 
         def _do_connect():
             return mt5.initialize(
-                login=login, password=password, server=server
+                "C:\\Metatrader-5\\terminal64.exe",
+                login=login, password=password, server=server, portable=True
             )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
