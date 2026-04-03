@@ -10,24 +10,20 @@ class MT5Connector:
         self._initialized = False
 
     def initialize(self) -> bool:
-        """Initialize connection to MT5 terminal."""
+        """Initialize connection to MT5 terminal. Raises MT5ConnectionError on failure."""
         if not self._initialized:
-            # Note: In the container environment, MetaTrader5.initialize() 
-            # might be called without args if env vars are handled by the wrapper,
-            # but we'll use the settings for explicitness.
-            success = mt5.initialize(
-                # login=settings.env.MT5_LOGIN or 0,
-                # password=settings.env.MT5_PASSWORD or "",
-                # server=settings.env.MT5_SERVER or ""
-                timeout=30000,
-            )
+            success = mt5.initialize(timeout=30000)
             if success:
                 self._initialized = True
                 logger.info("MT5 initialized successfully")
                 return True
             else:
-                logger.error(f"MT5 initialization failed: {mt5.last_error()}")
-                return False
+                error_code, error_msg = mt5.last_error()
+                logger.error(f"MT5 initialization failed: {error_msg} ({error_code})")
+                raise MT5ConnectionError(
+                    f"MT5 initialization failed: {error_msg}",
+                    code=error_code
+                )
         return True
 
     def get_terminal_info(self):

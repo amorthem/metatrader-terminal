@@ -66,7 +66,7 @@ class MarketDataService:
         return tick_dict
 
     def copy_rates_from_pos(self, symbol: str, timeframe: str, start_pos: int, count: int) -> Optional[List[Dict]]:
-        if not mt5_connector.initialize(): return None
+        mt5_connector.initialize()
         mt5_timeframe = self.get_timeframe(timeframe)
         rates = mt5.copy_rates_from_pos(symbol, mt5_timeframe, start_pos, count)
         if rates is None: return None
@@ -75,7 +75,7 @@ class MarketDataService:
         return df.to_dict(orient='records')
 
     def copy_rates_range(self, symbol: str, timeframe: str, start: datetime, end: datetime) -> Optional[List[Dict]]:
-        if not mt5_connector.initialize(): return None
+        mt5_connector.initialize()
         mt5_timeframe = self.get_timeframe(timeframe)
         rates = mt5.copy_rates_range(symbol, mt5_timeframe, start, end)
         if rates is None: return None
@@ -83,8 +83,18 @@ class MarketDataService:
         df['time'] = pd.to_datetime(df['time'], unit='s')
         return df.to_dict(orient='records')
 
+    def copy_rates_from(self, symbol: str, timeframe: str, date_from: datetime, count: int) -> Optional[List[Dict]]:
+        mt5_connector.initialize()
+        mt5.symbol_select(symbol, True)
+        mt5_timeframe = self.get_timeframe(timeframe)
+        rates = mt5.copy_rates_from(symbol, mt5_timeframe, date_from, count)
+        if rates is None: return None
+        df = pd.DataFrame(rates)
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        return df.to_dict(orient='records')
+
     def copy_ticks_from(self, symbol: str, date_from: datetime, count: int, flags: str = 'ALL') -> Optional[List[Dict]]:
-        if not mt5_connector.initialize(): return None
+        mt5_connector.initialize()
         mt5.symbol_select(symbol, True)
         flags_map = {
             'ALL': mt5.COPY_TICKS_ALL,
@@ -99,7 +109,7 @@ class MarketDataService:
         return df.to_dict(orient='records')
 
     def copy_ticks_range(self, symbol: str, date_from: datetime, date_to: datetime, flags: str = 'ALL') -> Optional[List[Dict]]:
-        if not mt5_connector.initialize(): return None
+        mt5_connector.initialize()
         mt5.symbol_select(symbol, True)
         flags_map = {
             'ALL': mt5.COPY_TICKS_ALL,

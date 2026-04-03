@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 import MetaTrader5 as mt5
 from app.utils.config import settings
+from app.services.connector import mt5_connector
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,10 @@ def login(request: LoginRequest):
     Attempts to initialize MT5 with provided credentials to verify them.
     If successful, returns the deterministic API_KEY for future requests.
     """
+    # Shutdown existing connection before switching accounts
+    mt5.shutdown()
+    mt5_connector._initialized = False
+
     if not mt5.initialize(
         login=request.login,
         password=request.password,
@@ -35,10 +40,12 @@ def login(request: LoginRequest):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"MT5 Authentication failed: {error_msg}"
         )
-    
+
+    mt5_connector._initialized = True
+    logger.info(f"MT5 account switched to {request.login} on {request.server}")
     return {
-        "message": "Login successful", 
+        "message": "Login successful",
         "api_key": settings.api_key,
-        "login": request.login, 
+        "login": request.login,
         "server": request.server
     }

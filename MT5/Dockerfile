@@ -80,7 +80,7 @@ RUN wine pip install --no-cache-dir wheel && \
     wine pip install --no-cache-dir -r /tmp/requirements.txt && \
     wine pip install --no-cache-dir -r /tmp/api-requirements.txt
 
-# Layer 3: Copy everything else (changes frequently, but rebuild is instant)
+# Layer 4: Copy everything else (changes frequently, but rebuild is instant)
 COPY assets .
 COPY api /root/api
 COPY assets/supervisord.conf /etc/supervisord.conf

@@ -1,45 +1,33 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.services.mt5_service import mt5_service
-from typing import Optional, List
+from app.utils.exceptions import MT5SymbolNotFoundError
+from typing import Optional
 import MetaTrader5 as mt5
 
 router = APIRouter(prefix="/positions", tags=["Positions"])
 
-def error_response(detail: str):
-    code, msg = mt5.last_error()
-    return HTTPException(status_code=500, detail={"error": detail, "mt5_code": code, "mt5_msg": msg})
 
 @router.get("/")
 def get_positions(magic: Optional[int] = None):
-    try:
-        return mt5_service.get_positions(magic)
-    except Exception as e:
-        raise error_response(f"Error fetching positions: {str(e)}")
+    return mt5_service.get_positions(magic)
+
 
 @router.post("/close")
-def close_position(ticket: int, type_filling: str = "FOK"):
-    try:
-        result = mt5_service.close_position(ticket, type_filling=type_filling)
-        if result is None or result.retcode != 10009:
-            raise HTTPException(status_code=400, detail="Close failed")
-        return {"success": True, "result": result._asdict()}
-    except Exception as e:
-        raise error_response(f"Error closing position: {str(e)}")
+def close_position(ticket: int, volume: Optional[float] = None, type_filling: str = "FOK"):
+    result = mt5_service.close_position(ticket, volume=volume, type_filling=type_filling)
+    return {"success": True, "result": result._asdict()}
+
 
 @router.post("/close_all")
 def close_all_positions(order_type: str = "all", magic: Optional[int] = None, type_filling: str = "FOK"):
-    try:
-        results = mt5_service.close_all_positions(order_type, magic, type_filling=type_filling)
-        return {"message": f"Closed {len(results)} positions", "results": [r._asdict() for r in results]}
-    except Exception as e:
-        raise error_response(f"Error closing all positions: {str(e)}")
+    results = mt5_service.close_all_positions(order_type, magic, type_filling=type_filling)
+    return {"message": f"Closed {len(results)} positions", "results": [r._asdict() for r in results]}
+
 
 @router.get("/by_symbol/{symbol}")
 def get_positions_by_symbol(symbol: str):
-    try:
-        positions = mt5.positions_get(symbol=symbol)
-        if not positions:
-            raise HTTPException(status_code=404, detail="No positions for symbol")
-        return [p._asdict() for p in positions]
-    except Exception as e:
-        raise error_response(f"Error fetching positions by symbol: {str(e)}")
+    mt5_service.initialize()
+    positions = mt5.positions_get(symbol=symbol)
+    if not positions:
+        raise MT5SymbolNotFoundError(f"No positions found for symbol '{symbol}'")
+    return [p._asdict() for p in positions]

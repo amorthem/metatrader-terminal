@@ -37,11 +37,11 @@ PATCH_MARKER="$MT5_CFG/.patched"
 
 if [ ! -f "$PATCH_MARKER" ] && [ -d "$MT5_CFG" ]; then
     # Disable LiveUpdate to prevent version mismatch with MetaTrader5 pip package
-    printf '[LiveUpdate]\r\nLiveUpdateMode=2\r\n' | iconv -f UTF-8 -t UTF-16LE > "$MT5_CFG/terminal.ini"
+    { printf '\xFF\xFE'; printf '[LiveUpdate]\r\nLiveUpdateMode=2\r\n' | iconv -f UTF-8 -t UTF-16LE; } > "$MT5_CFG/terminal.ini"
     echo "LiveUpdate disabled in terminal.ini"
 
     # Enable algo trading via config
-    printf '[Experts]\r\nEnabled=1\r\n' | iconv -f UTF-8 -t UTF-16LE > "$MT5_CFG/common.ini"
+    { printf '\xFF\xFE'; printf '[Experts]\r\nEnabled=1\r\n' | iconv -f UTF-8 -t UTF-16LE; } > "$MT5_CFG/common.ini"
     echo "Algo trading enabled in common.ini"
 
     touch "$PATCH_MARKER"

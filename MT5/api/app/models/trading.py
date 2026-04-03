@@ -1,5 +1,6 @@
 
 from typing import Optional, List, Any
+from datetime import datetime
 from pydantic import BaseModel, Field, root_validator
 from app.utils.constants import (
     RETCODE_DESCRIPTIONS, 
@@ -21,7 +22,7 @@ class MarketOrderRequest(BaseModel):
 class PendingOrderRequest(BaseModel):
     symbol: str
     volume: float
-    order_type: str # 'BUY_LIMIT', 'SELL_LIMIT', etc.
+    order_type: str = Field(..., pattern="^(BUY_LIMIT|SELL_LIMIT|BUY_STOP|SELL_STOP|BUY_STOP_LIMIT|SELL_STOP_LIMIT)$")
     price: float
     sl: Optional[float] = None
     tp: Optional[float] = None
@@ -29,6 +30,15 @@ class PendingOrderRequest(BaseModel):
     comment: Optional[str] = ""
     magic: Optional[int] = 0
     type_filling: str = "FOK"
+    type_time: str = Field("GTC", pattern="^(GTC|DAY|SPECIFIED|SPECIFIED_DAY)$")
+    expiration: Optional[datetime] = None
+
+class ModifyPendingOrderRequest(BaseModel):
+    price: float
+    sl: Optional[float] = None
+    tp: Optional[float] = None
+    type_time: Optional[str] = Field(None, pattern="^(GTC|DAY|SPECIFIED|SPECIFIED_DAY)$")
+    expiration: Optional[datetime] = None
 
 class ModifySLTPRequest(BaseModel):
     ticket: int

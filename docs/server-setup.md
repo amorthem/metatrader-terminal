@@ -66,12 +66,12 @@ If building the image from source, the Dockerfile uses cached layers ordered by 
 | Layer | What it does | Rebuilds when... |
 | :--- | :--- | :--- |
 | System deps | Installs VNC, nginx, supervisor | Base image or apt list changes |
-| Python deps | `pip install` under Wine 7.0 | `requirements.txt` changes |
 | MT5 install | Downloads and installs MT5 under Wine 7.0 | `run-mt5.sh` changes |
 | Wine upgrade | Upgrades Wine 7.0 → 10.0 for IPC compatibility | `wine_fix.sh` changes |
+| Python deps | `pip install` under Wine 10.0 | `requirements.txt` changes |
 | App code | Copies auto-login, API, configs | **Any code change (instant)** |
 
-MT5 is installed under Wine 7.0 (fast), then Wine is upgraded to 10.0 afterward. This keeps install times down while ensuring runtime IPC compatibility with MT5 build 5727+.
+MT5 is installed under Wine 7.0 (fast), then Wine is upgraded to 10.0. Python packages are installed after the upgrade so they run under the correct Wine version. This keeps install times down while ensuring runtime IPC compatibility with MT5 build 5727+.
 
 ```bash
 # Build from source

@@ -10,7 +10,7 @@ except ImportError:
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.routers import trading, auth, account, positions, symbols, history, terminal
+from app.routers import trading, auth, account, positions, symbols, history, terminal, orders
 from app.dependencies.auth import verify_api_key
 from app.db.database import init_db
 from app.utils.config import settings
@@ -65,10 +65,35 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(MT5BaseException)
     async def mt5_exception_handler(request: Request, exc: MT5BaseException):
-        return JSONResponse(
-            status_code=400,
-            content={"error": exc.message, "code": exc.code},
-        )
+        try:
+            mt5_code, mt5_msg = mt5.last_error()
+        except Exception:
+            mt5_code, mt5_msg = None, None
+
+        body = {"error": exc.message}
+        if exc.code is not None:
+            body["code"] = exc.code
+        if mt5_code:
+            body["mt5_code"] = mt5_code
+            body["mt5_msg"] = mt5_msg
+
+        logger.error(f"MT5 error [{exc.__class__.__name__}]: {exc.message} (mt5={mt5_code})")
+        return JSONResponse(status_code=exc.status_code, content=body)
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        try:
+            mt5_code, mt5_msg = mt5.last_error()
+        except Exception:
+            mt5_code, mt5_msg = None, None
+
+        body = {"error": str(exc)}
+        if mt5_code:
+            body["mt5_code"] = mt5_code
+            body["mt5_msg"] = mt5_msg
+
+        logger.exception(f"Unhandled error on {request.method} {request.url.path}")
+        return JSONResponse(status_code=500, content=body)
 
     # Health Check (Internal/System)
     @app.get("/health", tags=["System"])
@@ -100,8 +125,13 @@ def create_app() -> FastAPI:
         dependencies=[Depends(verify_api_key)]
     )
     app.include_router(
-        history.router, 
-        prefix="/api/v1", 
+        history.router,
+        prefix="/api/v1",
+        dependencies=[Depends(verify_api_key)]
+    )
+    app.include_router(
+        orders.router,
+        prefix="/api/v1",
         dependencies=[Depends(verify_api_key)]
     )
     app.include_router(

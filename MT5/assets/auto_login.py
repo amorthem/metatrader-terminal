@@ -228,7 +228,7 @@ class VNClient:
             login=int(login),
             password=password,
             server=server,
-            timeout=30,
+            timeout=30000,
             portable=True
         )
 

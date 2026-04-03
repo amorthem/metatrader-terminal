@@ -22,6 +22,15 @@ class MT5Service:
     def send_market_order(self, *args, **kwargs):
         return trade_service.send_market_order(*args, **kwargs)
 
+    def send_pending_order(self, *args, **kwargs):
+        return trade_service.send_pending_order(*args, **kwargs)
+
+    def cancel_order(self, *args, **kwargs):
+        return trade_service.cancel_order(*args, **kwargs)
+
+    def modify_pending_order(self, *args, **kwargs):
+        return trade_service.modify_pending_order(*args, **kwargs)
+
     def modify_sl_tp(self, *args, **kwargs):
         return trade_service.modify_sl_tp(*args, **kwargs)
 
@@ -46,6 +55,9 @@ class MT5Service:
     def copy_rates_from_pos(self, *args, **kwargs):
         return market_data_service.copy_rates_from_pos(*args, **kwargs)
 
+    def copy_rates_from(self, *args, **kwargs):
+        return market_data_service.copy_rates_from(*args, **kwargs)
+
     def copy_rates_range(self, *args, **kwargs):
         return market_data_service.copy_rates_range(*args, **kwargs)
 
@@ -54,6 +66,18 @@ class MT5Service:
 
     def copy_ticks_range(self, *args, **kwargs):
         return market_data_service.copy_ticks_range(*args, **kwargs)
+
+    def get_orders(self, *args, **kwargs):
+        return trade_service.get_orders(*args, **kwargs)
+
+    def get_orders_total(self, *args, **kwargs):
+        return trade_service.get_orders_total(*args, **kwargs)
+
+    def order_calc_margin(self, *args, **kwargs):
+        return trade_service.order_calc_margin(*args, **kwargs)
+
+    def order_calc_profit(self, *args, **kwargs):
+        return trade_service.order_calc_profit(*args, **kwargs)
 
     def get_history_deals(self, *args, **kwargs):
         return history_service.get_history_deals(*args, **kwargs)
