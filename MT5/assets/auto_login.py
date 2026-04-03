@@ -295,6 +295,12 @@ def main():
         # Dismiss any remaining popups
         vnc_mt5_client.dismiss_popups()
 
+        # Enable algorithmic trading
+        vnc_mt5_client.enable_algo_trading()
+
+        # Open the Journal tab
+        vnc_mt5_client.open_journal_tab()
+
         print("Auto-login sequence completed.")
     except Exception as e:
         print(f"An error occurred during auto-login: {e}")
