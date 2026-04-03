@@ -83,4 +83,34 @@ class MarketDataService:
         df['time'] = pd.to_datetime(df['time'], unit='s')
         return df.to_dict(orient='records')
 
+    def copy_ticks_from(self, symbol: str, date_from: datetime, count: int, flags: str = 'ALL') -> Optional[List[Dict]]:
+        if not mt5_connector.initialize(): return None
+        mt5.symbol_select(symbol, True)
+        flags_map = {
+            'ALL': mt5.COPY_TICKS_ALL,
+            'INFO': mt5.COPY_TICKS_INFO,
+            'TRADE': mt5.COPY_TICKS_TRADE,
+        }
+        ticks = mt5.copy_ticks_from(symbol, date_from, count, flags_map.get(flags.upper(), mt5.COPY_TICKS_ALL))
+        if ticks is None or len(ticks) == 0: return None
+        df = pd.DataFrame(ticks)
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms')
+        return df.to_dict(orient='records')
+
+    def copy_ticks_range(self, symbol: str, date_from: datetime, date_to: datetime, flags: str = 'ALL') -> Optional[List[Dict]]:
+        if not mt5_connector.initialize(): return None
+        mt5.symbol_select(symbol, True)
+        flags_map = {
+            'ALL': mt5.COPY_TICKS_ALL,
+            'INFO': mt5.COPY_TICKS_INFO,
+            'TRADE': mt5.COPY_TICKS_TRADE,
+        }
+        ticks = mt5.copy_ticks_range(symbol, date_from, date_to, flags_map.get(flags.upper(), mt5.COPY_TICKS_ALL))
+        if ticks is None or len(ticks) == 0: return None
+        df = pd.DataFrame(ticks)
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms')
+        return df.to_dict(orient='records')
+
 market_data_service = MarketDataService()

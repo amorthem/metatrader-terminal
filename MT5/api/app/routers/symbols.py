@@ -87,6 +87,30 @@ def fetch_data_range(symbol: str, timeframe: str, start: datetime, end: datetime
     except Exception as e:
         raise error_response(f"Error fetching rates range: {str(e)}")
 
+@router.get("/ticks/{symbol}/from")
+def get_ticks_from(symbol: str, date_from: datetime, count: int = 1000, flags: str = "ALL"):
+    try:
+        data = mt5_service.copy_ticks_from(symbol, date_from, count, flags)
+        if data is None:
+            raise HTTPException(status_code=404, detail="No tick data found")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise error_response(f"Error fetching ticks: {str(e)}")
+
+@router.get("/ticks/{symbol}/range")
+def get_ticks_range(symbol: str, date_from: datetime, date_to: datetime, flags: str = "ALL"):
+    try:
+        data = mt5_service.copy_ticks_range(symbol, date_from, date_to, flags)
+        if data is None:
+            raise HTTPException(status_code=404, detail="No tick data found")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise error_response(f"Error fetching ticks range: {str(e)}")
+
 @router.get("/book/{symbol}")
 def get_book(symbol: str):
     try:

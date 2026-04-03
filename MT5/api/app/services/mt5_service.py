@@ -49,6 +49,12 @@ class MT5Service:
     def copy_rates_range(self, *args, **kwargs):
         return market_data_service.copy_rates_range(*args, **kwargs)
 
+    def copy_ticks_from(self, *args, **kwargs):
+        return market_data_service.copy_ticks_from(*args, **kwargs)
+
+    def copy_ticks_range(self, *args, **kwargs):
+        return market_data_service.copy_ticks_range(*args, **kwargs)
+
     def get_history_deals(self, *args, **kwargs):
         return history_service.get_history_deals(*args, **kwargs)
 
