@@ -15,6 +15,7 @@ from app.dependencies.auth import verify_api_key
 from app.db.database import init_db
 from app.utils.config import settings
 from app.utils.exceptions import MT5BaseException
+from app.services.connector import mt5_connector
 from app.utils.logger import logger_instance
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.utils.trailing import trailing_stop_handler
@@ -34,6 +35,10 @@ async def lifespan(app: FastAPI):
         logger.info(f"API Key successfully generated from seed. Use this for Authentication: {settings.api_key}")
     else:
         logger.warning("No API_KEY_SEED found! Authentication will be disabled.")
+
+    # Start MT5 connection in background (non-blocking)
+    logger.info("Starting MT5 background initialization...")
+    mt5_connector.start_init()
 
     # Start scheduled tasks
     logger.info("Starting Background Scheduler...")

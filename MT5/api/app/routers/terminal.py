@@ -32,11 +32,7 @@ def get_mt5_version():
 
 @router.post("/connect")
 def connect(login: int, password: str, server: str):
-    mt5.shutdown()
-    mt5_connector._initialized = False
-    if not mt5.initialize(login=login, password=password, server=server, timeout=30000):
-        raise MT5ConnectionError("Failed to connect to MT5 terminal")
-    mt5_connector._initialized = True
+    mt5_connector.connect(login=login, password=password, server=server)
     return {"status": "connected"}
 
 
@@ -45,6 +41,7 @@ def disconnect():
     if not mt5.shutdown():
         raise MT5ConnectionError("Failed to disconnect from MT5 terminal")
     mt5_connector._initialized = False
+    mt5_connector._initializing = False
     return {"status": "disconnected"}
 
 

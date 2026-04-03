@@ -53,6 +53,23 @@ if [ "$BUILD_MODE" = "1" ]; then
     exit 0
 fi
 
-# Run MT5
-echo "Launching MetaTrader 5..."
-wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable
+# Keep MT5 alive — restart it whenever it exits so the VNC auto-login
+# script has time to type credentials into the GUI. On Wine 10.0, MT5
+# exits immediately if no server is configured; the auto-login process
+# needs the terminal open to enter login details via VNC.
+LOGIN_MARKER="/tmp/login_complete"
+
+while true; do
+    echo "Launching MetaTrader 5..."
+    wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable
+    EXIT_CODE=$?
+
+    # If auto-login has completed and MT5 exits, it's a real crash — still restart
+    if [ -f "$LOGIN_MARKER" ]; then
+        echo "MT5 exited (code $EXIT_CODE) after login — restarting in 5s..."
+        sleep 5
+    else
+        echo "MT5 exited (code $EXIT_CODE) before login — restarting in 2s..."
+        sleep 2
+    fi
+done

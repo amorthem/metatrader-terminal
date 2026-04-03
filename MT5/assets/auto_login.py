@@ -195,9 +195,12 @@ class VNClient:
 
     def _set_login_successful_env_var(self):
         """
-        Sets an environment variable to indicate a successful login.
+        Sets an environment variable and marker file to indicate a successful login.
+        The marker file is used by run-mt5.sh to know auto-login has completed.
         """
         os.environ['LOGIN_SUCCESSFUL'] = 'true'
+        with open('/tmp/login_complete', 'w') as f:
+            f.write('1')
 
     def verify_login(self, login: str, password: str, server: str, max_retries: int = 3) -> bool:
         """
@@ -228,7 +231,7 @@ class VNClient:
             login=int(login),
             password=password,
             server=server,
-            timeout=30000,
+            timeout=5000,
             portable=True
         )
 
