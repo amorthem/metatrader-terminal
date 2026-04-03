@@ -304,8 +304,11 @@ def main():
         # Open the Journal tab
         vnc_mt5_client.open_journal_tab()
 
-        # Verify login via IPC and create marker file for the API server
-        vnc_mt5_client.verify_login(login, password, server)
+        # Create marker file so the API server knows auto-login is done.
+        # We skip mt5.initialize() here — it blocks wineserver for 80s.
+        # The server connector verifies via mt5.terminal_info() instead.
+        with open('/tmp/login_complete', 'w') as f:
+            f.write('1')
 
         print("Auto-login sequence completed.")
     except Exception as e:
