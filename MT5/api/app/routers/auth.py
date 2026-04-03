@@ -26,7 +26,8 @@ def login(request: LoginRequest):
     if not mt5.initialize(
         login=request.login,
         password=request.password,
-        server=request.server
+        server=request.server,
+        timeout=30000,
     ):
         error_code, error_msg = mt5.last_error()
         logger.error(f"MT5 Login failed for {request.login}: {error_msg} ({error_code})")

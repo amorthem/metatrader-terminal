@@ -33,7 +33,7 @@ def get_mt5_version():
 @router.post("/connect")
 def connect(login: int, password: str, server: str):
     try:
-        if not mt5.initialize(login=login, password=password, server=server):
+        if not mt5.initialize(login=login, password=password, server=server, timeout=30000):
             raise error_response("Failed to connect to MT5 terminal")
         return {"status": "connected"}
     except Exception as e:

@@ -30,33 +30,19 @@ else
     echo "MetaTrader 5 already installed."
 fi
 
-# Patch MT5 config files (UTF-16LE encoded) — only once via marker file
+# Patch MT5 config files — only once via marker file.
+# Write minimal UTF-16LE ini files directly to avoid iconv round-trip corruption.
 MT5_CFG="/opt/wineprefix/drive_c/Metatrader-5/Config"
 PATCH_MARKER="$MT5_CFG/.patched"
 
-if [ ! -f "$PATCH_MARKER" ]; then
+if [ ! -f "$PATCH_MARKER" ] && [ -d "$MT5_CFG" ]; then
     # Disable LiveUpdate to prevent version mismatch with MetaTrader5 pip package
-    if [ -f "$MT5_CFG/terminal.ini" ]; then
-        iconv -f UTF-16LE -t UTF-8 "$MT5_CFG/terminal.ini" > /tmp/mt5_cfg.ini 2>/dev/null
-        if ! grep -q "LiveUpdateMode" /tmp/mt5_cfg.ini; then
-            sed -i 's/\[LiveUpdate\]/[LiveUpdate]\nLiveUpdateMode=2/' /tmp/mt5_cfg.ini
-            iconv -f UTF-8 -t UTF-16LE /tmp/mt5_cfg.ini > "$MT5_CFG/terminal.ini"
-            echo "LiveUpdate disabled in terminal.ini"
-        fi
-        rm -f /tmp/mt5_cfg.ini
-    fi
+    printf '[LiveUpdate]\r\nLiveUpdateMode=2\r\n' | iconv -f UTF-8 -t UTF-16LE > "$MT5_CFG/terminal.ini"
+    echo "LiveUpdate disabled in terminal.ini"
 
     # Enable algo trading via config
-    if [ -f "$MT5_CFG/common.ini" ]; then
-        iconv -f UTF-16LE -t UTF-8 "$MT5_CFG/common.ini" > /tmp/mt5_cfg.ini 2>/dev/null
-        sed -i 's/^\(Enabled=\).*/\11/' /tmp/mt5_cfg.ini
-        if ! grep -q "Enabled=1" /tmp/mt5_cfg.ini; then
-            sed -i 's/\[Experts\]/[Experts]\nEnabled=1/' /tmp/mt5_cfg.ini
-        fi
-        iconv -f UTF-8 -t UTF-16LE /tmp/mt5_cfg.ini > "$MT5_CFG/common.ini"
-        echo "Algo trading enabled in common.ini"
-        rm -f /tmp/mt5_cfg.ini
-    fi
+    printf '[Experts]\r\nEnabled=1\r\n' | iconv -f UTF-8 -t UTF-16LE > "$MT5_CFG/common.ini"
+    echo "Algo trading enabled in common.ini"
 
     touch "$PATCH_MARKER"
 fi

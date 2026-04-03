@@ -19,6 +19,7 @@ class MT5Connector:
                 # login=settings.env.MT5_LOGIN or 0,
                 # password=settings.env.MT5_PASSWORD or "",
                 # server=settings.env.MT5_SERVER or ""
+                timeout=30000,
             )
             if success:
                 self._initialized = True
