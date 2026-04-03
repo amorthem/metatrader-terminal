@@ -304,6 +304,9 @@ def main():
         # Open the Journal tab
         vnc_mt5_client.open_journal_tab()
 
+        # Verify login via IPC and create marker file for the API server
+        vnc_mt5_client.verify_login(login, password, server)
+
         print("Auto-login sequence completed.")
     except Exception as e:
         print(f"An error occurred during auto-login: {e}")
