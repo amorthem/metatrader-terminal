@@ -59,7 +59,27 @@ This will start the MT5 terminal (VNC), auto-login to your account, and launch t
 
 > **Note**: The full startup takes approximately **2 minutes**. Most of this time is the MT5 terminal connecting to your broker's server. The API will not be available until login is verified. You can monitor progress via the VNC interface at `http://localhost:6901`.
 
-## 4. Nginx Configuration
+## 4. Build Architecture
+
+If building the image from source, the Dockerfile uses cached layers ordered by change frequency:
+
+| Layer | What it does | Rebuilds when... |
+| :--- | :--- | :--- |
+| System deps | Installs VNC, nginx, supervisor | Base image or apt list changes |
+| Python deps | `pip install` under Wine 7.0 | `requirements.txt` changes |
+| MT5 install | Downloads and installs MT5 under Wine 7.0 | `run-mt5.sh` changes |
+| Wine upgrade | Upgrades Wine 7.0 → 10.0 for IPC compatibility | `wine_fix.sh` changes |
+| App code | Copies auto-login, API, configs | **Any code change (instant)** |
+
+MT5 is installed under Wine 7.0 (fast), then Wine is upgraded to 10.0 afterward. This keeps install times down while ensuring runtime IPC compatibility with MT5 build 5727+.
+
+```bash
+# Build from source
+cd MT5
+docker build -t mt5-terminal .
+```
+
+## 5. Nginx Configuration
 
 1.  **Copy snippets**:
     ```bash
@@ -81,14 +101,14 @@ This will start the MT5 terminal (VNC), auto-login to your account, and launch t
     sudo systemctl reload nginx
     ```
 
-## 5. SSL with Certbot (Optional but Recommended)
+## 6. SSL with Certbot (Optional but Recommended)
 
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d vnc.yourdomain.com -d api.yourdomain.com
 ```
 
-## 6. Accessing the Services
+## 7. Accessing the Services
 
 - **MT5 VNC**: `https://vnc.yourdomain.com`
 - **MT5 API**: `https://api.yourdomain.com`

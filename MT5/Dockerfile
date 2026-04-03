@@ -60,27 +60,34 @@ RUN apt-get update && \
 # Copy easy-novnc binary from build stage
 COPY --from=novnc-build /bin/easy-novnc /usr/local/bin/
 
-# Upgrade Wine 7.0 → 10.0 (required for MT5 build 5727+ IPC named pipes)
-COPY assets/wine_fix.sh /tmp/wine_fix.sh
-RUN chmod +x /tmp/wine_fix.sh && /tmp/wine_fix.sh && rm /tmp/wine_fix.sh
-
 # Copy configuration files
 COPY assets/menu.xml /etc/xdg/openbox/
-COPY assets/supervisord.conf /etc/
 
 WORKDIR ${HOME}
 
-# Copy assets, api and install Python dependencies
+# Layer 1: Install Python dependencies under Wine 7.0 (fast)
+COPY assets/requirements.txt /tmp/requirements.txt
+COPY api/requirements.txt /tmp/api-requirements.txt
+RUN wine pip install --no-cache-dir wheel && \
+    wine pip install --no-cache-dir -r /tmp/requirements.txt && \
+    wine pip install --no-cache-dir -r /tmp/api-requirements.txt
+
+# Layer 2: Install MT5 terminal under Wine 7.0 (fast)
+COPY assets/run-mt5.sh /tmp/run-mt5.sh
+RUN chmod +x /tmp/run-mt5.sh && BUILD_MODE=1 xvfb-run /tmp/run-mt5.sh
+
+# Layer 3: Upgrade Wine 7.0 → 10.0 (required for MT5 build 5727+ IPC named pipes)
+COPY assets/wine_fix.sh /tmp/wine_fix.sh
+RUN chmod +x /tmp/wine_fix.sh && /tmp/wine_fix.sh && rm /tmp/wine_fix.sh
+
+# Layer 3: Copy everything else (changes frequently, but rebuild is instant)
 COPY assets .
 COPY api /root/api
-RUN wine pip install --no-cache-dir wheel && \
-    wine pip install --no-cache-dir -r requirements.txt && \
-    wine pip install --no-cache-dir -r /root/api/requirements.txt && \
-    mkdir -p ${HOME}/Desktop && \
+COPY assets/supervisord.conf /etc/supervisord.conf
+RUN mkdir -p ${HOME}/Desktop && \
     cp metatrader.desktop ${HOME}/Desktop/ && \
     cp metatrader.desktop /usr/share/applications/ && \
-    chmod +x run-server.sh xtigervnc.sh easy-novnc.sh run-mt5.sh vnc-auth.sh entrypoint.sh && \
-    BUILD_MODE=1 xvfb-run ./run-mt5.sh
+    chmod +x run-server.sh xtigervnc.sh easy-novnc.sh run-mt5.sh vnc-auth.sh entrypoint.sh
 
 # EXPOSE 5900
 EXPOSE 6901 8000

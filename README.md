@@ -72,6 +72,33 @@ This repository packages everything needed to run a reliable MT5 instance on a L
 > [!NOTE]
 > **Startup Time**: The full startup (VNC + MT5 launch + auto-login + API) takes approximately **2 minutes**. Most of this time is the MT5 terminal connecting to your broker's server. The API will not be available until login is verified.
 
+## 🔧 How It Works
+
+### Docker Build
+
+The image is built in cached layers, ordered by change frequency so most code changes rebuild in seconds:
+
+1. **Base image** (`tobix/pywine:3.9`) + system deps (VNC, nginx, supervisor)
+2. **Python dependencies** — `pip install` under Wine 7.0 (cached unless `requirements.txt` changes)
+3. **MT5 terminal install** — downloads and installs MetaTrader 5 under Wine 7.0 (cached unless `run-mt5.sh` changes)
+4. **Wine 10.0 upgrade** — upgrades Wine runtime for MT5 IPC compatibility (cached unless `wine_fix.sh` changes)
+5. **Application code** — copies auto-login script, API code, configs (rebuilds instantly on any code change)
+
+### Container Runtime
+
+```
+entrypoint.sh
+  └─ vnc-auth.sh (set VNC password)
+  └─ supervisord
+       ├─ Priority 0: VNC server + noVNC web proxy
+       ├─ Priority 1: Nginx, Openbox (window manager)
+       ├─ Priority 2: MT5 terminal (wine terminal64.exe)
+       ├─ Priority 3: Auto-login (dismiss popups → VNC login → enable algo trading)
+       └─ Priority 4: FastAPI server
+```
+
+All heavy work (pip, MT5 install, Wine upgrade) happens at **build time**. At runtime, it's just starting processes — no installs, no upgrades.
+
 ## 📖 Documentation
 
 For production setups, please refer to the detailed guides in the `docs/` folder:
