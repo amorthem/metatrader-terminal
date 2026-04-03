@@ -69,7 +69,15 @@ WORKDIR ${HOME}
 COPY assets/run-mt5.sh /tmp/run-mt5.sh
 RUN chmod +x /tmp/run-mt5.sh && BUILD_MODE=1 xvfb-run /tmp/run-mt5.sh
 
-# Layer 2: Install Python dependencies under Wine 7.0
+# Layer 2: Upgrade Wine 7.0 to 10.0 (MT5 build 5727+ needs Wine 10.0 for IPC)
+# The base image has the WineHQ repo pre-configured.
+RUN rm -f /etc/apt/sources.list.d/winehq.list && \
+    apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-downgrades winehq-stable && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    wineserver -k 2>/dev/null || true
+
+# Layer 3: Install Python dependencies under Wine 10.0
 COPY assets/requirements.txt /tmp/requirements.txt
 COPY api/requirements.txt /tmp/api-requirements.txt
 RUN wine pip install --no-cache-dir wheel && \
@@ -77,7 +85,7 @@ RUN wine pip install --no-cache-dir wheel && \
     wine pip install --no-cache-dir -r /tmp/api-requirements.txt && \
     wine pip install --no-cache-dir "cryptography<41"
 
-# Layer 3: Copy everything else (changes frequently, but rebuild is instant)
+# Layer 4: Copy everything else (changes frequently, but rebuild is instant)
 COPY assets .
 COPY api /root/api
 COPY assets/supervisord.conf /etc/supervisord.conf
