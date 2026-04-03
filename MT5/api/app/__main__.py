@@ -12,7 +12,7 @@ def main():
         "app.main:app",
         host=settings.env.HOST,
         port=settings.env.PORT,
-        reload=settings.env.ENV_STATE == "development",
+        reload=False,  # uvicorn file watcher hangs under Wine
         log_level=settings.env.LOG_LEVEL.lower(),
     )
 
