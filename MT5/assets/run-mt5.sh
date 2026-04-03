@@ -24,27 +24,19 @@ if [ ! -f "/opt/wineprefix/drive_c/Metatrader-5/terminal64.exe" ]; then
     wine mt5setup.exe /auto /path:"C:\Metatrader-5"
     wineserver -w
 
+    # Disable LiveUpdate immediately after install (before any launch)
+    # to prevent terminal from auto-updating to a build newer than
+    # the MetaTrader5 Python library (5.0.5640 on PyPI).
+    MT5_CFG_DIR="/opt/wineprefix/drive_c/Metatrader-5/Config"
+    mkdir -p "$MT5_CFG_DIR"
+    { printf '\xFF\xFE'; printf '[LiveUpdate]\r\nLiveUpdateMode=2\r\n' | iconv -f UTF-8 -t UTF-16LE; } > "$MT5_CFG_DIR/terminal.ini"
+    { printf '\xFF\xFE'; printf '[Experts]\r\nEnabled=1\r\n' | iconv -f UTF-8 -t UTF-16LE; } > "$MT5_CFG_DIR/common.ini"
+    echo "LiveUpdate disabled and algo trading enabled."
+
     # Clean up
     rm mt5setup.exe MicrosoftEdgeWebview2Setup.exe
 else
     echo "MetaTrader 5 already installed."
-fi
-
-# Patch MT5 config files — only once via marker file.
-# Write minimal UTF-16LE ini files directly to avoid iconv round-trip corruption.
-MT5_CFG="/opt/wineprefix/drive_c/Metatrader-5/Config"
-PATCH_MARKER="$MT5_CFG/.patched"
-
-if [ ! -f "$PATCH_MARKER" ] && [ -d "$MT5_CFG" ]; then
-    # Disable LiveUpdate to prevent version mismatch with MetaTrader5 pip package
-    { printf '\xFF\xFE'; printf '[LiveUpdate]\r\nLiveUpdateMode=2\r\n' | iconv -f UTF-8 -t UTF-16LE; } > "$MT5_CFG/terminal.ini"
-    echo "LiveUpdate disabled in terminal.ini"
-
-    # Enable algo trading via config
-    { printf '\xFF\xFE'; printf '[Experts]\r\nEnabled=1\r\n' | iconv -f UTF-8 -t UTF-16LE; } > "$MT5_CFG/common.ini"
-    echo "Algo trading enabled in common.ini"
-
-    touch "$PATCH_MARKER"
 fi
 
 # Run MT5 (Skip if in BUILD_MODE)
