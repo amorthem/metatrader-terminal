@@ -84,7 +84,7 @@ COPY assets/supervisord.conf /etc/supervisord.conf
 RUN mkdir -p ${HOME}/Desktop && \
     cp metatrader.desktop ${HOME}/Desktop/ && \
     cp metatrader.desktop /usr/share/applications/ && \
-    chmod +x run-server.sh xtigervnc.sh easy-novnc.sh run-mt5.sh vnc-auth.sh entrypoint.sh wine_fix.sh auto_login_wrapper.sh
+    chmod +x run-server.sh xtigervnc.sh easy-novnc.sh run-mt5.sh vnc-auth.sh entrypoint.sh auto_login_wrapper.sh
 
 # EXPOSE 5900
 EXPOSE 6901 8000

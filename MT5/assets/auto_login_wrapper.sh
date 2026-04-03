@@ -1,6 +1,7 @@
 #!/bin/bash
-# Wrapper: runs VNC auto-login under Wine, then kills wineserver
-# from Linux for a clean IPC handshake on restart.
+# Wrapper: runs VNC auto-login under Wine, then creates the marker
+# file for the API server. No wineserver kill needed — the connector
+# passes credentials to mt5.initialize() directly.
 
 LOG=/tmp/auto_login.log
 
@@ -24,24 +25,9 @@ WINE_PID=$!
 echo "Waiting for auto-login to complete..."
 for i in $(seq 1 60); do
     if grep -q "Auto-login sequence completed" $LOG 2>/dev/null; then
-        # Wait for MT5 to save credentials to accounts.dat before killing
-        # wineserver. After restart, MT5 uses saved credentials to
-        # auto-reconnect to the broker without VNC interaction.
-        echo "Auto-login succeeded. Waiting for MT5 to save credentials..."
-        ACCOUNTS_DAT="/opt/wineprefix/drive_c/Metatrader-5/Config/accounts.dat"
-        for j in $(seq 1 30); do
-            if [ -f "$ACCOUNTS_DAT" ] && [ "$(stat -c%s "$ACCOUNTS_DAT" 2>/dev/null)" -gt 100 ]; then
-                echo "Credentials saved (accounts.dat: $(stat -c%s "$ACCOUNTS_DAT") bytes)"
-                break
-            fi
-            sleep 1
-        done
-
-        echo "Killing wineserver for clean IPC..."
-        /usr/bin/wineserver -k 2>/dev/null || true
-        sleep 2
+        echo "Auto-login succeeded."
         echo "1" > /tmp/login_complete
-        echo "Marker created, services will restart via supervisor."
+        echo "Marker created."
         exit 0
     fi
     if grep -q "An error occurred" $LOG 2>/dev/null; then

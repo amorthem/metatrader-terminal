@@ -15,8 +15,8 @@ class MT5Connector:
     """MT5 connection manager.
 
     Waits for auto-login to create LOGIN_MARKER (VNC login done),
-    then calls mt5.initialize() in a background thread to establish
-    the IPC pipe without blocking uvicorn.
+    then calls mt5.initialize() with credentials in a background
+    thread to establish the IPC pipe without blocking uvicorn.
     """
 
     def __init__(self):
@@ -31,8 +31,18 @@ class MT5Connector:
     def _do_initialize(self):
         """Blocking init — runs in a background thread after marker exists."""
         try:
-            logger.info("MT5 initialization started (background thread)...")
-            success = mt5.initialize(MT5_PATH, portable=True)
+            login = settings.env.MT5_LOGIN
+            password = settings.env.MT5_PASSWORD
+            server = settings.env.MT5_SERVER
+
+            logger.info(f"MT5 initialization started (login={login}, server={server})...")
+            success = mt5.initialize(
+                MT5_PATH,
+                login=login,
+                password=password,
+                server=server,
+                portable=True,
+            )
             if success:
                 self._initialized = True
                 logger.info("MT5 initialized successfully")
