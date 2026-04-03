@@ -227,7 +227,7 @@ class VNClient:
 
         # Attempt to establish a connection to the MetaTrader 5 terminal
         is_connected = mt5.initialize(
-            "",
+            "C:\\Metatrader-5\\terminal64.exe",
             login=int(login),
             password=password,
             server=server,

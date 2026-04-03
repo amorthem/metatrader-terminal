@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from pydantic import BaseModel
 from app.utils.config import settings
 from app.services.connector import mt5_connector
@@ -16,16 +16,11 @@ class LoginRequest(BaseModel):
 @router.post("/login")
 def login(request: LoginRequest):
     """
-    Switches MT5 to the given account credentials.
-    If successful, returns the deterministic API_KEY for future requests.
+    Returns the API key for authenticated requests.
+    MT5 account credentials are configured via environment variables
+    and handled by the auto-login process at container startup.
     """
-    mt5_connector.connect(
-        login=request.login,
-        password=request.password,
-        server=request.server,
-    )
-
-    logger.info(f"MT5 account switched to {request.login} on {request.server}")
+    mt5_connector.initialize()
     return {
         "message": "Login successful",
         "api_key": settings.api_key,
