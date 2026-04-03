@@ -78,7 +78,8 @@ COPY assets/requirements.txt /tmp/requirements.txt
 COPY api/requirements.txt /tmp/api-requirements.txt
 RUN wine pip install --no-cache-dir wheel && \
     wine pip install --no-cache-dir -r /tmp/requirements.txt && \
-    wine pip install --no-cache-dir -r /tmp/api-requirements.txt
+    wine pip install --no-cache-dir -r /tmp/api-requirements.txt && \
+    wine pip install --no-cache-dir "cryptography<41"
 
 # Layer 4: Copy everything else (changes frequently, but rebuild is instant)
 COPY assets .
