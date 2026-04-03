@@ -1,10 +1,13 @@
 import MetaTrader5 as mt5
 import logging
+import os
 import threading
 from app.utils.exceptions import MT5ConnectionError
 from app.utils.config import settings
 
 logger = logging.getLogger(__name__)
+
+LOGIN_MARKER = "/tmp/login_complete"
 
 
 class MT5Connector:
@@ -14,8 +17,16 @@ class MT5Connector:
         self._lock = threading.Lock()
         self._init_thread: threading.Thread = None
 
+    @staticmethod
+    def _login_ready() -> bool:
+        """Check if auto-login has confirmed MT5 is connected."""
+        return os.path.exists(LOGIN_MARKER)
+
     def _do_initialize(self):
-        """Blocking init — runs in a background thread."""
+        """Blocking init — runs in a background thread.
+        Only called after auto-login has confirmed MT5 is connected,
+        so mt5.initialize() should succeed quickly without blocking
+        wineserver for 80s."""
         try:
             logger.info("MT5 initialization started (background thread)...")
             success = mt5.initialize("C:\\Metatrader-5\\terminal64.exe", portable=True)
@@ -31,9 +42,12 @@ class MT5Connector:
             self._initializing = False
 
     def start_init(self):
-        """Kick off initialization in a background thread (non-blocking)."""
+        """Kick off initialization in a background thread (non-blocking).
+        Will not start until the auto-login marker file exists."""
         with self._lock:
             if self._initialized or self._initializing:
+                return
+            if not self._login_ready():
                 return
             self._initializing = True
             self._init_thread = threading.Thread(
@@ -44,8 +58,8 @@ class MT5Connector:
     def initialize(self) -> bool:
         """Ensure MT5 is connected. Returns True or raises MT5ConnectionError.
 
-        If init is already running in the background, returns 503 immediately
-        instead of blocking the request for 80s.
+        Will not call mt5.initialize() until the auto-login marker exists,
+        preventing the blocking C call from starving wineserver/uvicorn.
         """
         if self._initialized:
             return True
@@ -55,7 +69,12 @@ class MT5Connector:
                 "MT5 is still connecting — try again shortly"
             )
 
-        # Not initialized and not in progress — kick off background init
+        if not self._login_ready():
+            raise MT5ConnectionError(
+                "Waiting for MT5 auto-login to complete"
+            )
+
+        # Login marker exists but not yet initialized — kick off background init
         self.start_init()
         raise MT5ConnectionError(
             "MT5 initialization started — try again shortly"
