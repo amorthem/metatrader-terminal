@@ -60,6 +60,10 @@ RUN apt-get update && \
 # Copy easy-novnc binary from build stage
 COPY --from=novnc-build /bin/easy-novnc /usr/local/bin/
 
+# Upgrade Wine 7.0 → 10.0 (required for MT5 build 5727+ IPC named pipes)
+COPY assets/wine_fix.sh /tmp/wine_fix.sh
+RUN chmod +x /tmp/wine_fix.sh && /tmp/wine_fix.sh && rm /tmp/wine_fix.sh
+
 # Copy configuration files
 COPY assets/menu.xml /etc/xdg/openbox/
 COPY assets/supervisord.conf /etc/
@@ -78,7 +82,6 @@ RUN wine pip install --no-cache-dir wheel && \
     chmod +x run-server.sh xtigervnc.sh easy-novnc.sh run-mt5.sh vnc-auth.sh entrypoint.sh && \
     BUILD_MODE=1 xvfb-run ./run-mt5.sh
 
-# TODO: Upgrade to wine >= 8 for better MT5 stability.
 # EXPOSE 5900
 EXPOSE 6901 8000
 
