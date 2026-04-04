@@ -58,17 +58,30 @@ class VNClient:
 
         time.sleep(0.5)
 
-    def wait_and_dismiss_liveupdate(self):
+    def wait_for_terminal_ready(self):
         """
-        Waits for the LiveUpdate popup to appear after MT5 starts,
-        then dismisses it by pressing Tab (to focus 'Later') and Enter.
-        Must be called before any other VNC interaction to prevent the
-        popup from interfering with login form input.
+        Waits for the MT5 terminal to finish loading before interacting.
+        The terminal needs time to initialize the GUI after startup.
         """
-        # Wait for LiveUpdate popup to appear (it shows up ~15-20s after MT5 starts)
         time.sleep(15)
 
-        # Tab moves focus from 'Restart' to 'Later', Enter clicks it
+    def dismiss_liveupdate(self):
+        """
+        Dismisses the LiveUpdate popup if present by clicking the 'Later'
+        button. The popup typically appears 40-60s after terminal start,
+        after the update has been downloaded. Must be called AFTER login
+        to avoid blocking IPC with a modal dialog.
+        """
+        # LiveUpdate downloads take 40-60s from terminal start.
+        # Login takes ~20s, so wait ~30s more for the popup to appear.
+        time.sleep(30)
+
+        # Click "Later" button directly (centered at ~689,454 in 1280x800)
+        self.client.mouseMove(689, 454)
+        self.client.mousePress(1)
+        time.sleep(0.3)
+
+        # Fallback: Tab from 'Restart' to 'Later', then press Enter
         self.client.keyPress('tab')
         time.sleep(0.1)
         self.client.keyPress('enter')
@@ -289,8 +302,8 @@ def main():
     vnc_mt5_client = VNClient(server_url=VNC_SERVER_URL, password=VNC_SERVER_PASSWORD)
 
     try:
-        # Dismiss LiveUpdate popup before doing anything else
-        vnc_mt5_client.wait_and_dismiss_liveupdate()
+        # Wait for the terminal GUI to be ready
+        vnc_mt5_client.wait_for_terminal_ready()
 
         # Log in to MetaTrader 5
         vnc_mt5_client.login_to_mt5(login, password, server)
@@ -303,6 +316,11 @@ def main():
 
         # Open the Journal tab
         vnc_mt5_client.open_journal_tab()
+
+        # Wait for and dismiss the LiveUpdate popup before creating
+        # the marker. The popup is modal and blocks MT5 IPC, so it
+        # must be dismissed before the API server can connect.
+        vnc_mt5_client.dismiss_liveupdate()
 
         # Create marker file so the API server knows VNC login is done.
         # The server will call mt5.initialize() in a background thread.

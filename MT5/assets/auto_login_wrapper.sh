@@ -21,9 +21,10 @@ done
 wine python /root/auto_login.py > $LOG 2>&1 &
 WINE_PID=$!
 
-# Wait for completion message or timeout (120s)
+# Wait for completion message or timeout (180s)
+# Login takes ~20s + 30s LiveUpdate wait = ~50s minimum
 echo "Waiting for auto-login to complete..."
-for i in $(seq 1 60); do
+for i in $(seq 1 90); do
     if grep -q "Auto-login sequence completed" $LOG 2>/dev/null; then
         echo "Auto-login succeeded."
         echo "1" > /tmp/login_complete
@@ -38,6 +39,6 @@ for i in $(seq 1 60); do
     sleep 2
 done
 
-echo "Auto-login timed out after 120s"
+echo "Auto-login timed out after 180s"
 cat $LOG
 exit 1

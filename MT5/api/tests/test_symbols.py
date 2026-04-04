@@ -19,8 +19,7 @@ def test_get_symbol_info(client):
 
 def test_get_symbol_info_query(client):
     r = client.get("/api/v1/symbols/info", params={"symbol": "EURUSD"})
-    # May return 500 due to route ordering (/info matched as {symbol})
-    assert r.status_code in (200, 500)
+    assert r.status_code == 200
 
 
 def test_get_symbol_info_path(client):
@@ -56,7 +55,7 @@ def test_select_symbol(client):
 
 def test_select_unknown_symbol(client):
     r = client.post("/api/v1/symbols/select/FAKESYMBOL123")
-    assert r.status_code == 500
+    assert r.status_code == 404
 
 
 def test_check_symbol(client):

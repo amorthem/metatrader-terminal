@@ -1,7 +1,6 @@
 import MetaTrader5 as mt5
 import logging
 import os
-import sys
 import threading
 from app.utils.exceptions import MT5ConnectionError
 from app.utils.config import settings
@@ -41,28 +40,37 @@ class MT5Connector:
             password = settings.env.MT5_PASSWORD
             server = settings.env.MT5_SERVER
 
+            # Try without credentials first — auto-login already handled
+            # the VNC login, so passing credentials again would trigger an
+            # "account changed" event that disables algo trading.
             logger.info(f"MT5 initialization started (login={login}, server={server})...")
-            success = mt5.initialize(
-                MT5_PATH,
-                login=login,
-                password=password,
-                server=server,
-                portable=True,
-            )
+            success = mt5.initialize(MT5_PATH, portable=True)
+
+            if not success:
+                # Fallback: pass credentials (needed on first-ever start
+                # before auto-login config is saved by the terminal).
+                logger.info("Retrying with credentials...")
+                success = mt5.initialize(
+                    MT5_PATH,
+                    login=login,
+                    password=password,
+                    server=server,
+                    portable=True,
+                )
+
             if success:
                 self._initialized = True
                 self._ipc_failures = 0
                 logger.info("MT5 initialized successfully")
 
-                # Verify algo trading is enabled
+                # Check algo trading status (informational only —
+                # auto-login enables it via VNC Ctrl+E)
                 info = mt5.terminal_info()
                 if info and not info.trade_allowed:
                     logger.warning(
-                        "Algo trading is disabled — exiting to trigger "
-                        "auto-login restart which enables it via VNC..."
+                        "Algo trading is currently disabled — "
+                        "trading requests will fail until it is enabled"
                     )
-                    self._initialized = False
-                    os._exit(1)
                 else:
                     logger.info(f"Algo trading: {'enabled' if info and info.trade_allowed else 'unknown'}")
             else:

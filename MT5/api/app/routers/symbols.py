@@ -13,8 +13,13 @@ def get_all_symbols():
     return mt5_service.get_symbols()
 
 
-@router.get("/{symbol}")
-def get_symbol(symbol: str):
+@router.get("/info")
+def get_symbol_info_query(symbol: str = Query(...)):
+    return mt5_service.get_symbol_info(symbol)
+
+
+@router.get("/info/{symbol}")
+def get_symbol_info_path(symbol: str):
     return mt5_service.get_symbol_info(symbol)
 
 
@@ -31,13 +36,8 @@ def get_symbol_tick(symbol: str):
     return mt5_service.get_symbol_info_tick(symbol)
 
 
-@router.get("/info/{symbol}")
-def get_symbol_info_path(symbol: str):
-    return mt5_service.get_symbol_info(symbol)
-
-
-@router.get("/info")
-def get_symbol_info_query(symbol: str = Query(...)):
+@router.get("/{symbol}")
+def get_symbol(symbol: str):
     return mt5_service.get_symbol_info(symbol)
 
 

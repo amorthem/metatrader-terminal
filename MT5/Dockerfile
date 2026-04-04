@@ -75,6 +75,7 @@ RUN rm -f /etc/apt/sources.list.d/winehq.list && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-downgrades winehq-stable && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    winecfg -v=win11 && \
     wineserver -k 2>/dev/null || true
 
 # Layer 3: Install Python dependencies under Wine 10.0

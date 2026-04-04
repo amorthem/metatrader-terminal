@@ -146,7 +146,7 @@ The image is built in cached layers, ordered by change frequency so most code ch
 
 1. **Base image** (`tobix/pywine:3.9`) + system deps (VNC, nginx, supervisor)
 2. **MT5 terminal install** — downloads and installs MetaTrader 5 under Wine 7.0 (cached unless `run-mt5.sh` changes)
-3. **Wine 10.0 upgrade** — upgrades Wine runtime for MT5 IPC compatibility (cached unless `wine_fix.sh` changes)
+3. **Wine 10.0 upgrade** — upgrades Wine runtime and sets Windows 11 version for MT5 IPC compatibility
 4. **Python dependencies** — `pip install` under Wine 10.0 (cached unless `requirements.txt` changes)
 5. **Application code** — copies auto-login script, API code, configs (rebuilds instantly on any code change)
 
@@ -154,16 +154,20 @@ The image is built in cached layers, ordered by change frequency so most code ch
 
 ```
 entrypoint.sh
-  └─ vnc-auth.sh (set VNC password)
+  ├─ Clean stale state (X11 locks, login marker, algo trading config)
+  ├─ vnc-auth.sh (set VNC password)
   └─ supervisord
        ├─ Priority 0: VNC server + noVNC web proxy
        ├─ Priority 1: Nginx, Openbox (window manager)
        ├─ Priority 2: MT5 terminal (wine terminal64.exe)
-       ├─ Priority 3: Auto-login (dismiss popups → VNC login → enable algo trading)
-       └─ Priority 4: FastAPI server
+       ├─ Priority 3: Auto-login (VNC login → enable algo trading → dismiss LiveUpdate)
+       └─ Priority 4: FastAPI server (connects to MT5 via IPC pipe)
 ```
 
 All heavy work (pip, MT5 install, Wine upgrade) happens at **build time**. At runtime, it's just starting processes — no installs, no upgrades.
+
+> [!NOTE]
+> **LiveUpdate**: MT5 may download component updates on startup (~60s after launch). The auto-login script waits for and dismisses the LiveUpdate popup before signaling the API server to connect. This prevents the modal popup from blocking the IPC pipe.
 
 ## 📖 Documentation
 
