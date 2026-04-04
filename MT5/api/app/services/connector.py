@@ -53,6 +53,24 @@ class MT5Connector:
                 self._initialized = True
                 self._ipc_failures = 0
                 logger.info("MT5 initialized successfully")
+
+                # Verify algo trading is enabled
+                info = mt5.terminal_info()
+                if info and not info.trade_allowed:
+                    logger.warning(
+                        "Algo trading is disabled — restarting auto-login to enable it..."
+                    )
+                    self._initialized = False
+                    import subprocess
+                    subprocess.run(
+                        ["supervisorctl", "restart", "auto-login"],
+                        capture_output=True, timeout=10
+                    )
+                    # Wait for auto-login to re-enable algo trading, then retry
+                    import time
+                    time.sleep(30)
+                else:
+                    logger.info(f"Algo trading: {'enabled' if info and info.trade_allowed else 'unknown'}")
             else:
                 error_code, error_msg = mt5.last_error()
                 self._ipc_failures += 1
