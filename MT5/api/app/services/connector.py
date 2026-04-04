@@ -1,6 +1,7 @@
 import MetaTrader5 as mt5
 import logging
 import os
+import sys
 import threading
 from app.utils.exceptions import MT5ConnectionError
 from app.utils.config import settings
@@ -9,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 LOGIN_MARKER = "/tmp/login_complete"
 MT5_PATH = "C:\\Metatrader-5\\terminal64.exe"
+MAX_IPC_RETRIES = 3
 
 
 class MT5Connector:
@@ -17,11 +19,15 @@ class MT5Connector:
     Waits for auto-login to create LOGIN_MARKER (VNC login done),
     then calls mt5.initialize() with credentials in a background
     thread to establish the IPC pipe without blocking uvicorn.
+
+    If IPC fails after MAX_IPC_RETRIES attempts, exits the process
+    so supervisor can restart the server with a fresh wineserver.
     """
 
     def __init__(self):
         self._initialized = False
         self._initializing = False
+        self._ipc_failures = 0
         self._lock = threading.Lock()
 
     @staticmethod
@@ -45,10 +51,28 @@ class MT5Connector:
             )
             if success:
                 self._initialized = True
+                self._ipc_failures = 0
                 logger.info("MT5 initialized successfully")
             else:
                 error_code, error_msg = mt5.last_error()
-                logger.error(f"MT5 initialization failed: {error_msg} ({error_code})")
+                self._ipc_failures += 1
+                logger.error(
+                    f"MT5 initialization failed ({self._ipc_failures}/{MAX_IPC_RETRIES}): "
+                    f"{error_msg} ({error_code})"
+                )
+
+                if self._ipc_failures >= MAX_IPC_RETRIES:
+                    logger.critical(
+                        f"MT5 IPC failed {MAX_IPC_RETRIES} times — "
+                        "restarting MT5 and server for fresh wineserver..."
+                    )
+                    # Restart MT5 via supervisor before exiting
+                    import subprocess
+                    subprocess.run(
+                        ["supervisorctl", "restart", "mt5"],
+                        capture_output=True, timeout=10
+                    )
+                    os._exit(1)
         except Exception as e:
             logger.exception(f"MT5 initialization crashed: {e}")
         finally:
