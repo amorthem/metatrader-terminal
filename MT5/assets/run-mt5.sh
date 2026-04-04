@@ -14,7 +14,7 @@ if [ ! -f "/opt/wineprefix/drive_c/Metatrader-5/terminal64.exe" ]; then
     wget -q $URL_WEBVIEW
 
     # Set environment to Windows 10
-    winecfg -v=win10
+    winecfg -v=win11
 
     # Install WebView2
     wine MicrosoftEdgeWebview2Setup.exe /silent /install
