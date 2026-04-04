@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 LOGIN_MARKER = "/tmp/login_complete"
 MT5_PATH = "C:\\Metatrader-5\\terminal64.exe"
-MAX_IPC_RETRIES = 3
+MAX_IPC_RETRIES = 2
 
 
 class MT5Connector:
