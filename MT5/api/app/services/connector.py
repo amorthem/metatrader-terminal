@@ -58,17 +58,11 @@ class MT5Connector:
                 info = mt5.terminal_info()
                 if info and not info.trade_allowed:
                     logger.warning(
-                        "Algo trading is disabled — restarting auto-login to enable it..."
+                        "Algo trading is disabled — exiting to trigger "
+                        "auto-login restart which enables it via VNC..."
                     )
                     self._initialized = False
-                    import subprocess
-                    subprocess.run(
-                        ["supervisorctl", "restart", "auto-login"],
-                        capture_output=True, timeout=10
-                    )
-                    # Wait for auto-login to re-enable algo trading, then retry
-                    import time
-                    time.sleep(30)
+                    os._exit(1)
                 else:
                     logger.info(f"Algo trading: {'enabled' if info and info.trade_allowed else 'unknown'}")
             else:
@@ -82,14 +76,10 @@ class MT5Connector:
                 if self._ipc_failures >= MAX_IPC_RETRIES:
                     logger.critical(
                         f"MT5 IPC failed {MAX_IPC_RETRIES} times — "
-                        "restarting MT5 and server for fresh wineserver..."
+                        "exiting server for fresh wineserver restart..."
                     )
-                    # Restart MT5 via supervisor before exiting
-                    import subprocess
-                    subprocess.run(
-                        ["supervisorctl", "restart", "mt5"],
-                        capture_output=True, timeout=10
-                    )
+                    # os._exit bypasses try/except — supervisor restarts
+                    # both the server and MT5 (autorestart=true)
                     os._exit(1)
         except Exception as e:
             logger.exception(f"MT5 initialization crashed: {e}")
