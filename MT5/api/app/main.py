@@ -36,15 +36,15 @@ async def lifespan(app: FastAPI):
         logger.warning("No API_KEY_SEED found! Authentication will be disabled.")
 
     # Start scheduled tasks
-    logger.info("Starting Background Scheduler...")
-    scheduler.add_job(trailing_stop_handler, "interval", seconds=20)
-    scheduler.start()
+    # logger.info("Starting Background Scheduler...")
+    # scheduler.add_job(trailing_stop_handler, "interval", seconds=20)
+    # scheduler.start()
     
     yield
     
     # Shutdown event
-    logger.info("Shutting down scheduler...")
-    scheduler.shutdown()
+    # logger.info("Shutting down scheduler...")
+    # scheduler.shutdown()
 
 def create_app() -> FastAPI:
     app = FastAPI(
