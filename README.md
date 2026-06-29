@@ -32,7 +32,7 @@ This repository packages everything needed to run a reliable MT5 instance on a L
 
 1.  **Clone the Repo**:
     ```bash
-    git clone https://github.com/nodalytics/metatrader-terminal.git
+    git clone https://github.com/amorthem/metatrader-terminal.git
     cd metatrader-terminal
     ```
 
