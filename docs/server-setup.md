@@ -11,7 +11,7 @@ This guide outlines the steps to set up the MetaTrader 5 terminal and its API on
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/nodalytics/metatrader-terminal.git
+git clone https://github.com/amorthem/metatrader-terminal.git
 cd metatrader-terminal
 ```
 
