@@ -51,14 +51,9 @@ fi
 # needs the terminal open to enter login details via VNC.
 LOGIN_MARKER="/tmp/login_complete"
 
-MT5_CFG_DIR="/opt/wineprefix/drive_c/Metatrader-5/Config"
-mkdir -p "$MT5_CFG_DIR"
-{ printf '\xFF\xFE'; printf '[Experts]\r\nEnabled=1\r\n' | iconv -f UTF-8 -t UTF-16LE; } > "$MT5_CFG_DIR/common.ini"
-echo "Force enabled Algo Trading (common.ini updated)."
-
 while true; do
     echo "Launching MetaTrader 5..."
-    wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable /config:Config/common.ini
+    wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable
     EXIT_CODE=$?
 
     # If auto-login has completed and MT5 exits, it's a real crash — still restart
