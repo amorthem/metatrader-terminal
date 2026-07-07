@@ -53,7 +53,7 @@ LOGIN_MARKER="/tmp/login_complete"
 
 while true; do
     echo "Launching MetaTrader 5..."
-    wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable
+    wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable /experts:on
     EXIT_CODE=$?
 
     # If auto-login has completed and MT5 exits, it's a real crash — still restart
