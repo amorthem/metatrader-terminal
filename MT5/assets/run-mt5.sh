@@ -42,7 +42,7 @@ else
 fi
 
 # ==============================================================================
-# 2. Config Files Generation (UTF-16LE with BOM)
+# 2. Config Files Generation & Registry Injection
 # ==============================================================================
 mkdir -p "$MT5_CFG_DIR"
 
@@ -58,6 +58,21 @@ COMMON_CONFIG="[Experts]\r\nEnabled=1\r\nAllowDllImport=1\r\nWebRequest=1\r\nWeb
     printf '\xFF\xFE'
     printf "$COMMON_CONFIG" | iconv -f UTF-8 -t UTF-16LE
 } > "$MT5_CFG_DIR/common.ini"
+
+# 2.3 🛠️ Inject WebRequest URLs directly into Wine Registry (บังคับเขียนค่าเข้า Registry ทุกครั้งที่รัน)
+if [ -n "$ALLOWED_URLS" ]; then
+    echo "[CONFIG] Injecting WebRequest URLs into Wine Registry..."
+    
+    # เปิดใช้งาน WebRequest (1 = Enable)
+    wine reg add "HKCU\Software\MetaQuotes\Terminal\Common" /v WebRequest /t REG_DWORD /d 1 /f >/dev/null 2>&1
+
+    # แปลงเครื่องหมาย comma (,) ให้เป็น semicolon (;) ถ้ามี แล้วยิงเข้า Registry
+    REG_URLS=$(echo "$ALLOWED_URLS" | tr ',' ';')
+    wine reg add "HKCU\Software\MetaQuotes\Terminal\Common" /v WebRequestURLs /t REG_SZ /d "$REG_URLS" /f >/dev/null 2>&1
+
+    # บันทึกค่าลง Disk ให้เรียบร้อยก่อนเปิดโปรแกรม
+    wineserver -w
+fi
 
 echo "[CONFIG] LiveUpdate disabled, AlgoTrading & WebRequest enabled (URLs: ${ALLOWED_URLS})."
 
